@@ -1,0 +1,208 @@
+{% extends 'userbase.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% set active_page = 'all_users' %}
+{% block content %}
+
+<div class="container px-5 pb-5">
+    <div class="row row-cols-1 row-cols-md-2 g-4 justify-content-center">
+
+        <!-- Left Section - User Profile Sidebar -->
+        <div class="col-12 col-md-4 d-flex justify-content-center px-2">
+            <div class="col-12 col-md-10 p-5" style="border: 1px solid #f0f0f0; border-radius: 40px;">
+
+                <!-- Profile Image -->
+                {% if user.profile_image %}
+                <div class="position-relative mb-3 mx-auto align-items-center" style="width: 180px; height: 180px; overflow: hidden;">
+                    <img src="/static/uploads/{{ user.profile_image }}" class="img-fluid img-thumbnail rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% else %}
+                    <div class="position-relative">
+                        <div class="mb-4 mx-auto align-items-center bg-secondary" style="width: 180px; height: 180px; overflow: hidden; border-radius: 100%;">
+                            <div class="position-relative d-flex justify-content-center align-items-center bg-secondary" style="width: 180px; height: 180px; overflow: hidden; border-radius: 10px;">
+                                <p class="text-white fs-5 m-0">No Avatar</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Profile Name -->
+                <div class="text-center align-items-center mt-4 pt-4">
+                    <h3 class="fw-bold">{{ user.first_name }} {{ user.last_name }}</h3>
+                    <h4 style="color: #646464">@{{ user.username }}</h4>
+
+                    <!-- Role Badge -->
+                    <div class="mt-2">
+                        {% if user.role == 'admin' %}
+                            <span class="badge bg-danger">Administrator</span>
+                        {% elif user.role == 'editor' %}
+                            <span class="badge bg-warning text-dark">Editor</span>
+                        {% elif user.role == 'moderator' %}
+                            <span class="badge bg-info">Moderator</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Traveller</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Profile - Follow -->
+                {% if session['role'] != 'traveller' or session['subscription_status'] != 'Free' %}
+                    {% if user_id|string != session['user_id']|string %}
+                        {% if is_following %}
+                            <button class="btn btn-sm btn-danger mt-3 d-block mx-auto"
+                                    onclick="showAlertModal('unfollowUserModal', 'Confirm Unfollow', 'Warning',
+                                    'Are you sure you want to unfollow?<br>After unfollowing, related events will no longer appear on your Departure Board.',
+                                    function(e) {
+                                        e.preventDefault();
+                                        const modalEl = document.getElementById('unfollowUserModal');
+                                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                        if (modalInstance) {
+                                          modalInstance.hide();
+                                        }
+                                        window.location.href = '{{ url_for('unfollow_user', followed_id=user_id) }}';
+                                    })">
+                              Unfollow
+                            </button>
+                        {% else %}
+                            <form action="{{ url_for('follow_user', followed_id=user_id) }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-primary mt-3 d-block mx-auto" title="Follow User">Follow</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Section - User Management -->
+        <div class="col-md-8 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+
+                <!-- Page Title -->
+                <div class="pb-4">
+                    <div>
+                        <h1 class="fw-bold">User Profile</h1>
+                        <p class="fs-5 text-muted">You can change the role, status and sharing permissions of other users here.</p>
+                    </div>
+                </div>
+
+                <!-- Profile upadte success message -->
+                {% if profile_update_successful %}
+                <div class="m-0 pb-4">
+                    <div class="bg-success text-white text-center p-2 mb-2" style="border-radius: 4px;">
+                        <div class="p-2">User information has been updated successfully!</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <!-- Profile Details -->
+                    <form action="{{ url_for('edit_user') }}" method="POST" style="margin-top: 0;">
+                        <input type="hidden" name="user_id" id="user_id" value="{{ user_id }}">
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6 mb-3">
+                                <label for="username" class="form-label fw-bold fs-5">Username</label>
+                                <input type="text" class="form-control form-control-lg" id="username" name="username" value="{{ user['username'] }}" disabled>
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                                <label for="useremail" class="form-label fs-6">Email</label>
+                                <input type="text" class="form-control form-control-lg" id="email" name="email" value="{{ user['email'] }}" disabled>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6 mb-3">
+                                <label for="firstname" class="form-label fw-bold fs-5">First Name</label>
+                                <input type="text" class="form-control form-control-lg" id="first_name" name="first_name" value="{{ user['first_name'] }}" disabled>
+                            </div>
+
+                            <div class="col-lg-6 mb-3">
+                                <label for="useremail" class="form-label fw-bold fs-5">Last Name</label>
+                                <input type="text" class="form-control form-control-lg" id="last_name" name="last_name" value="{{ user['last_name'] }}" disabled>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label fw-bold fs-5">Location</label>
+                            <input type="text" class="form-control form-control-lg" id="location" name="location" value="{{ user['location'] }}" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="personal description" class="form-label fw-bold fs-5">Personal Description</label>
+                            <textarea id="personal_description" class="form-control form-control-lg" id="personal_description" name="personal_description" rows="5" disabled>{{ user['personal_description'] }}</textarea>
+                        </div>
+
+                        <!-- Admin Tools - Change Role & Status -->
+                        <div class="row justify-content-center">
+
+                            <!-- Dropdown Menu - Role -->
+                            <div class="col-lg-6 mb-3">
+                                <label for="role" class="form-label fw-bold fs-5">Role</label>
+                                {% if user['username'] != session.get('username') %}
+                                    <select class="form-select form-select-lg" name="role" id="role">
+                                        <option value="traveller" {% if user['role'] == 'traveller' %} selected {% endif %}>Traveller</option>
+                                        <option value="moderator" {% if user['role'] == 'moderator' %} selected {% endif %}>Moderator</option>
+                                        <option value="editor" {% if user['role'] == 'editor' %} selected {% endif %}>Editor</option>
+                                        <option value="admin" {% if user['role'] == 'admin' %} selected {% endif %}>Administrator</option>
+                                    </select>
+                                {% else %}
+                                    <input type="text" class="form-control form-control-lg" id="role" name="role" value="{{ user['role']|title }}" disabled>
+                                    <div class="form-text">You cannot change your own role.</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Dropdown Menu - Status -->
+                            <div class="col-lg-6 mb-3">
+                                <label for="status" class="form-label fw-bold fs-5">Status</label>
+                                {% if user['username'] != session.get('username') %}
+                                    <select class="form-select form-select-lg" name="status" id="status">
+                                        <option value="active" {% if user['status'] == 'active' %} selected {% endif %}>Active</option>
+                                        <option value="banned" {% if user['status'] == 'banned' %} selected {% endif %}>Banned</option>
+                                    </select>
+
+                                {% else %}
+                                    <input type="text" class="form-control form-control-lg" id="status" name="status" value="{{ user['status']|title }}" disabled>
+                                    <div class="form-text">You cannot change your own status.</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Sharing Permissions -->
+                            <div class="col-lg-12 mb-3">
+                                <label for="shareable" class="form-label fw-bold fs-5">Sharing Permissions</label>
+                                {% if user['username'] != session.get('username') %}
+                                    <select class="form-select form-select-lg" name="shareable" id="shareable">
+                                        <option value="1" {% if user['shareable'] == 1 %} selected {% endif %}>Can Share Journeys</option>
+                                        <option value="0" {% if user['shareable'] == 0 %} selected {% endif %}>Cannot Share Journeys</option>
+                                    </select>
+                                    <div class="form-text mt-2">
+                                        <small class="text-muted">
+                                            Users who cannot share journeys can still create private journeys but cannot make them public.
+                                        </small>
+                                    </div>
+                                {% else %}
+                                    <input type="text" class="form-control form-control-lg" value="{% if user['shareable'] == 1 %}Can Share Journeys{% else %}Cannot Share Journeys{% endif %}" disabled>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        {% if user['username'] != session['username'] %}
+                        <div class="row justify-content-center">
+                            <div class="mt-4 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg" style="min-width: 140px;">Save Changes</button>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% set modal_id = 'unfollowUserModal' %}
+{% include 'components/modal.html' %}
+
+{% endblock %}

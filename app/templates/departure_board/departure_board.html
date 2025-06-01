@@ -1,0 +1,243 @@
+{% extends 'userbase.html' %}
+{% block title %}Departure Board{% endblock %}
+
+{% set active_page = 'departure_board' %}
+
+{% block content %}
+<section class="container col-lg-9 col-md-10 col-sm-12 mx-auto p-5">
+    <div class="row justify-content-center">
+        <h2 class="text-center align-middle fw-bold py-2">Departure Board</h2>
+        <p class="text-center align-middle lead text-muted">Stay on track with events from journeys, users, and
+            locations
+            you follow.</p>
+
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Event Timeline</h2>
+                </div>
+
+                {% if events and events|length > 0 %}
+                <div class="position-relative">
+                    <div class="position-absolute h-100 start-50 translate-middle-x"
+                         style="width: 2px; background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.2); z-index: 1;"></div>
+
+                    {% for my_event in events %}
+                    <div class="row mb-4 position-relative">
+                        <div class="position-absolute start-50 translate-middle-x"
+                             style="width: 16px; height: 16px; background-color: var(--bs-primary, #16404e); border-radius: 50%; z-index: 2; top: 24px; transform: translateY(-50%);"></div>
+
+                        {% if loop.index is odd %}
+                        <div class="col-6 text-end pe-4" style="padding-top: 24px;">
+                            <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{
+                                            my_event.start_time.strftime('%d %b %Y')
+                                        }}</p>
+                                    <p class="text-muted mb-0">{{ my_event.start_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% if my_event.end_time %}
+                                <div class="fw-bold align-self-start"> -</div>
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{
+                                            my_event.start_time.strftime('%d %b %Y')
+                                        }}</p>
+                                    <p class="text-muted mb-0">{{ my_event.end_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if my_event.follow_types and my_event.follow_types|length > 0 %}
+                            <div class="text-end pt-3">
+                                {% if 'journey' in my_event.follow_types %}
+                                <div>
+                                    <a href="{{ url_for('view_journey', journey_id=my_event.journey_id, mode='public') }}"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-globe"></i> {{ my_event.journey_title }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if 'user' in my_event.follow_types %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('edit_user', user_id=my_event.creator_user_id) }}"
+                                       class="btn btn-sm text-white
+          {% if my_event.role == 'admin' %}bg-warning
+          {% elif my_event.role == 'editor' %}bg-info
+          {% elif my_event.role == 'moderator' %}bg-secondary
+          {% else %}bg-dark
+          {% endif %}">
+                                        <i class="fas fa-user"></i> {{ my_event.username }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if 'location' in my_event.follow_types %}
+                                {% if my_event.latitude and my_event.longitude %}
+                                <a class="btn btn-sm text-white bg-success"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#mapModal"
+                                   data-lat="{{ my_event.latitude }}"
+                                   data-lng="{{ my_event.longitude }}"
+                                   data-name="{{ my_event.location }}">
+                                    <i class="fas fa-location"></i> {{ my_event.location }}
+                                </a>
+                                {% else %}
+                                <div class="mt-2">
+                                    <a class="btn btn-sm text-white bg-success">
+                                        <i class="fas fa-location"></i> {{ my_event.location }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-6 ps-4">
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <h5 class="card-title fw-bold mb-0">{{ my_event.title }}</h5>
+                                    </div>
+                                    {% if my_event.location %}
+                                    <div class="mt-2 mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ my_event.location }}
+                                    </div>
+                                    {% endif %}
+                                    <p class="card-text">{{ my_event.description }}</p>
+                                </div>
+                                {% if my_event.event_image %}
+                                <div class="card-footer bg-white border-0 pb-3">
+                                    <a href="/static/uploads/{{ my_event.event_image }}" target="_blank"
+                                       class="d-block">
+                                        <img src="/static/uploads/{{ my_event.event_image }}" class="img-fluid rounded"
+                                             style="max-height: 200px; object-fit: cover;">
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-6 pe-4 text-end">
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold mb-0"
+                                        style="word-wrap: break-word; overflow-wrap: break-word;">{{
+                                            my_event.title
+                                        }}</h5>
+                                    {% if my_event.location %}
+                                    <div class="mt-2 mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ my_event.location }}
+                                    </div>
+                                    {% endif %}
+                                    <p class="card-text">{{ my_event.description }}</p>
+                                </div>
+                                {% if my_event.event_image %}
+                                <div class="card-footer bg-white border-0 pb-3">
+                                    <a href="/static/uploads/{{ my_event.event_image }}" target="_blank"
+                                       class="d-block">
+                                        <img src="/static/uploads/{{ my_event.event_image }}" class="img-fluid rounded"
+                                             style="max-height: 200px; object-fit: cover;">
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-6 pe-4 text-end" style="padding-top: 24px;">
+                            <div class="d-flex justify-content-start align-items-center flex-wrap gap-2">
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{
+                                            my_event.start_time.strftime('%d %b %Y')
+                                        }}</p>
+                                    <p class="text-muted mb-0">{{ my_event.start_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% if my_event.end_time %}
+                                <div class="fw-bold align-self-start"> -</div>
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{
+                                            my_event.start_time.strftime('%d %b %Y')
+                                        }}</p>
+                                    <p class="text-muted mb-0">{{ my_event.end_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if my_event.follow_types and my_event.follow_types|length > 0 %}
+                            <div class="text-start pt-3">
+                                {% if 'journey' in my_event.follow_types %}
+                                <div>
+                                    <a href="{{ url_for('view_journey', journey_id=my_event.journey_id, mode='public') }}"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-globe"></i> {{ my_event.journey_title }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if 'user' in my_event.follow_types %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('edit_user', user_id=my_event.creator_user_id) }}"
+                                       class="btn btn-sm text-white
+          {% if my_event.role == 'admin' %}bg-warning
+          {% elif my_event.role == 'editor' %}bg-info
+          {% elif my_event.role == 'moderator' %}bg-secondary
+          {% else %}bg-dark
+          {% endif %}">
+                                        <i class="fas fa-user"></i> {{ my_event.username }}
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                {% if 'location' in my_event.follow_types %}
+                                {% if my_event.latitude and my_event.longitude %}
+                                <a class="btn btn-sm text-white bg-success"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#mapModal"
+                                   data-lat="{{ my_event.latitude }}"
+                                   data-lng="{{ my_event.longitude }}"
+                                   data-name="{{ my_event.location }}">
+                                    <i class="fas fa-location"></i> {{ my_event.location }}
+                                </a>
+                                {% else %}
+                                <div class="mt-2">
+                                    <a class="btn btn-sm text-white bg-success">
+                                        <i class="fas fa-location"></i> {{ my_event.location }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-start pt-5">
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-5x mb-4" style="color: #ccc;"></i>
+                        <h3 class="text-muted">No timeline events available</h3>
+                        <p class="text-muted">There are no events or photos yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+</section>
+
+{% include 'components/map_modal.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

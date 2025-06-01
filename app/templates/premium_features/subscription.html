@@ -1,0 +1,198 @@
+
+{% extends "base/userbase.html" %}
+{% block title %}Upgrade Subscription{% endblock %}
+
+{% block content %}
+
+<div class="container px-5">
+    <div class="row justify-content-center" style="padding-bottom: 2.8rem;">
+
+        <!-- Title -->
+        <div class="row mb-3">
+            <div class="col text-center mx-auto">
+                <h1 class="fw-bold">Choose Your Subscription Plan</h1>
+                <p class="text-note">Unlock exclusive travel experiences and journey tools.
+                    <br>Pre-pay for Premium access. No auto-renewal, no hidden fees. Top up anytime.</p>
+            </div>
+         </div>
+
+        <!-- GST tax switch -->
+        <div class="d-flex justify-content-center m-4" style="padding-bottom: 3.2rem;">
+            <div class="d-flex align-items-center gap-4 form-check form-switch">
+                <input id="gstHidden" name="gst_switch" type="hidden">
+
+                <!-- Left: Including GST -->
+                <div>
+                    <p class="fw-bold m-0">Excl. GST</p>
+                </div>
+                
+                <!-- Center: Switch -->
+                <div class="d-flex justify-content-center align-items-center">
+                <input class="form-check-input" type="checkbox" role="switch"
+                    id="gstSwitch" name="gst_switch" style="transform: scale(2.4); margin: 0 1.2rem; border: 0.4px solid #33333320;"/>
+                </div>
+
+                <!-- Right: Excluding GST price -->
+                <div>
+                    <p class="fw-bold m-0">
+                        <span style="color: #e55b4c;">(+15%)</span> Incl. GST
+                        <span></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Subscription Plans - Free -->
+        <div class="col-md-6 col-lg-3 mb-5">
+            <div class="card sub-plan h-100 d-flex flex-column position-relative">
+                <div class="card-body d-flex flex-column">
+                    <!-- Free - Title -->
+                    <div style="padding-bottom: 2.8rem;">
+                        <h2 class="fw-bold sub-plan-title">Free Trial</h2>
+                        <p class="text-note">Enjoy 1 month free premium features!</p>
+                    </div>
+
+                    <!-- Free - Price -->
+                    <div>
+                        <p class="fw-bold mb-1 sub-price">
+                            <span class="price-unit">NZD$</span>0.00
+                        </p>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Free - Feature -->
+                    <div>
+                        <ul class="list-unstyled text-note">
+                            <li><i class="bi bi-check2 text-success me-2"></i>Create private journeys</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>View public journeys</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Publish to homepage</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Multiple images per event</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Set cover image</li>
+                        </ul>
+                    </div>
+
+                    <!-- Free Trial - Button -->
+                    <div class="mt-auto pt-4">
+                    {% if not logged_in %}
+                        <a href="{{ url_for('sign_up') }}" class="btn btn-primary w-100">Sign Up to Get Started</a>
+                    {% elif user_role != 'traveller' %}
+                        <button class="btn btn-outline-secondary w-100" disabled>Not available for staff</button>
+                    {% elif subDetails.subscription_status == 'Trial' %}
+                        <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                    {% elif subDetails.is_trial_used %}
+                        <button class="btn btn-outline-secondary w-100" disabled>Trial Expired</button>
+                    {% else %}
+                        <p class="text-note mb-2">Free trial available once per account.</p>
+                        <a href="{{ url_for('start_trial') }}" class="btn btn-outline-primary w-100">Start 1 Month for Free</a>
+                    {% endif %}
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Plans - 1/3/6 month -->
+        {% for sub in subscriptions if sub.name != 'Free Trial' %}
+        <div class="col-md-6 col-lg-3 mb-5">
+            <div class="card sub-plan h-100 d-flex flex-column position-relative">
+                {% if sub.name == 'One Year' %}
+                <div class="recommended-banner top-0 start-50 translate-middle-x w-100">
+                    Most Popular <i class="bi bi-stars me-1"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+
+                    <!-- Premium - Title -->
+                    <div style="padding-bottom: 2.8rem;">
+                        <h2 class="fw-bold sub-plan-title">{{ sub.name }}</h2>
+                        <p class="text-note">
+                            Access premium features for {{ sub.duration_months }} month{{ 's' if sub.duration_months > 1 else '' }}.
+                        </p>
+                    </div>
+
+                    <!-- Premium - Price -->
+                    <div>
+                        <p class="fw-bold mb-1 sub-price">
+                            <span class="price-excl">
+                                <span class="price-unit">NZD$</span>{{ '%.2f'|format(sub.price_nzd_excl_gst) }}
+                            </span>
+                            <span class="price-incl d-none">
+                                <span class="price-unit">NZD$</span>{{ '%.2f'|format(sub.price_nzd_incl_gst) }}
+                            </span>
+                            
+                        </p>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Premium - Feature -->
+                    <div>
+                        <ul class="list-unstyled text-note">
+                            <li><i class="bi bi-check2 text-success me-2"></i>Create private journeys</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>View public journeys</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Publish to homepage</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Multiple images per event</li>
+                            <li><i class="bi bi-check2 text-success me-2"></i>Set cover image</li>
+                            {% if sub.name == 'One Quarter' %}
+                            <li class="fw-bold"><i class="bi bi-check2 text-success me-2"></i>10% OFF</li>
+                            {% elif sub.name == 'One Year' %}
+                            <li class="fw-bold"><i class="bi bi-check2 text-success me-2"></i>25% OFF</li>
+                            {% else %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <!-- Premium - Button -->
+                    <div class="mt-auto pt-5">
+                        {% if user_role != 'traveller' %}
+                            <button class="btn btn-outline-secondary w-100" disabled>Not available for staff</button>
+                        {% elif sub.name != 'One Year' %}
+                            <a href="{{ url_for('payment_page', subscription_id=sub.subscription_id) }}" class="btn btn-outline-primary w-100">Subscribe</a>
+                        {% else %}
+                            <a href="{{ url_for('payment_page', subscription_id=sub.subscription_id) }}" class="btn btn-primary w-100">Subscribe</a>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Note -->
+        <div class="col col-md-6 text-note">
+            Note:
+            <ul>
+                <li>Prices include 15% GST for New Zealand residents. International users will see prices excluding GST.</li>
+                <li>Free available once per account.</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Get references to the switch, badge, and GST tax
+    const gstSwitch = document.getElementById('gstSwitch');
+    const gstHidden = document.getElementById('gstHidden');
+    const exclGst = document.querySelectorAll('.price-excl');
+    const inclGst = document.querySelectorAll('.price-incl');
+
+    // Add event listener to update the badge and hidden value when the switch is toggled
+    gstSwitch.addEventListener('change', function() {
+        if (this.checked) {
+            // Show Incl. GST
+            inclGst.forEach(el => el.classList.remove('d-none'));
+            exclGst.forEach(el => el.classList.add('d-none'));
+            if (gstHidden) gstHidden.value = 'inclGST';
+        } else {
+            // Show Excl. GST
+            inclGst.forEach(el => el.classList.add('d-none'));
+            exclGst.forEach(el => el.classList.remove('d-none'));
+            if (gstHidden) gstHidden.value = 'exclGST';
+        }
+    });
+</script>
+
+{% endblock %}

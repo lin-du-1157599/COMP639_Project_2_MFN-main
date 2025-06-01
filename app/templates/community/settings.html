@@ -1,0 +1,149 @@
+{% extends 'userbase.html' %}
+{% block title %}Community Settings{% endblock %}
+
+{% set active_page = 'public_users' %}
+{% set active_tab = 'community_settings' %}
+
+{% block content %}
+
+<div class="container px-5">
+    <div class="row">  
+
+        <!-- Left - User profile sidebar -->
+        <div class="col col-md-4">
+            {% include 'components/profile_sidebar.html' %}
+        </div>
+
+        <!-- Right - Journey List -->
+        <div class="col-12 col-md-8 pt-3">
+
+            <!-- Tab -->
+            <div>
+                {% include 'components/profile_tabs.html' %}
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content p-5" id="profileTabsContent">
+
+                <!-- Commuity Settings - Title -->
+                <div class="pb-4">
+                    <h2 class="fw-bold">Community Settings</h2>
+                    <p class="text-note fs-5">Manage your profile visibility and community preferences.</p>
+                </div>
+
+                <!-- Public Visibility -->
+                <div class="custom-sec-white my-3">
+                    <form action="{{ url_for('community_settings') }}" method="POST">
+
+                    <!-- Profile Visibility -->
+                    <div class="col py-2">
+                        <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+                            <h4 class="fw-bold mb-3">Profile Visibility</h4>
+
+                            <!-- Switch Icon -->
+                            <div class="form-check form-switch">
+                                <input class="form-check-input me-5" type="checkbox" role="switch"
+                                    id="profileVisibilitySwitch" name="is_public" value="1"
+                                    {% if user_settings.is_public_profile %}checked{% endif %}
+                                    style="transform: scale(2.4);"/>
+                                <label class="form-check-label fw-bold" for="profileVisibilitySwitch">
+                                    Make my profile public
+                                </label>
+                            </div>
+                        </div>
+                    
+                        <div class="d-flex gap-3 alert alert-warning my-4">
+                            <i class="bi bi-shield-fill-exclamation fs-4 text-warning flex-shrink-0"></i>
+                            <div>
+                                <h5 class="fw-bold">Privacy Notice</h5>
+                                When your profile is public, other users can view your profile information, recent activities from public journeys, places you've visited, and achievements earned.
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="d-flex justify-content-end gap-3">
+                            {% if user_settings.is_public_profile %}
+                            <a href="{{ url_for('view_public_profile', user_id=session['user_id']) }}"
+                                class="btn btn-outline-primary">Preview My Profile</a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </div>
+                    </div>
+
+                    </form>
+                </div>
+
+                <!-- Community Features -->
+                <div class="p-4" style="background-color: #ffffff; border-radius: 20px;">
+                    <h3 class="fw-bold mb-3">
+                        <i class="fas fa-users me-2"></i>Community Features
+                    </h3>
+
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        <div class="col">
+                            <div class="card border-0 h-100" style="background-color: #f8f9fa;">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                    <h5 class="fw-bold mb-2">Discover Travelers</h5>
+                                    <p class="text-muted mb-3">Browse and search through public user profiles to find fellow travelers.</p>
+                                    <a href="{{ url_for('public_users') }}" class="btn btn-primary">
+                                        <i class="fas fa-users me-2"></i>Browse Community
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="card border-0 h-100" style="background-color: #f8f9fa;">
+                                <div class="card-body text-center p-4">
+                                    <i class="fas fa-user-friends fa-3x text-success mb-3"></i>
+                                    <h5 class="fw-bold mb-2">Follow & Connect</h5>
+                                    <p class="text-muted mb-3">
+                                        {% if session['subscription_status'] != 'Free' %}
+                                        Follow other travelers to stay updated with their journeys.
+                                        {% else %}
+                                        Upgrade to Premium to follow other travelers and stay updated.
+                                        {% endif %}
+                                    </p>
+                                    {% if session['subscription_status'] != 'Free' %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Premium Feature</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        
+        </div>
+    
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const visibilitySwitch = document.getElementById('profileVisibilitySwitch');
+    const switchLabel = visibilitySwitch.nextElementSibling;
+
+    function updateLabel() {
+        if (visibilitySwitch.checked) {
+            switchLabel.innerHTML = 'Public';
+            switchLabel.className = 'form-check-label fs-4 fw-bold text-primary';
+        } else {
+            switchLabel.innerHTML = 'Private';
+            switchLabel.className = 'form-check-label fs-4 fw-bold text-note';
+        }
+    }
+
+    // Update label on page load
+    updateLabel();
+
+    // Update label when switch is toggled
+    visibilitySwitch.addEventListener('change', updateLabel);
+});
+</script>
+
+{% endblock %}

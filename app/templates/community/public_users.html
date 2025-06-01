@@ -1,0 +1,194 @@
+{% extends 'userbase.html' %}
+
+{% block title %}Discover Users{% endblock %}
+
+{% set active_page = 'public_users' %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Page Header -->
+                <div class="row mb-4">
+                    <div class="col">
+                        <h1 class="fw-bold">Discover Travelers</h1>
+                        <p class="fs-5">Connect with fellow travelers and explore their journeys around the world.</p>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="row mb-4">
+                    <div class="col">
+                        <form action="{{ url_for('public_users') }}" method="GET" class="d-flex gap-3">
+                            <input type="text" name="search" class="form-control form-control-lg"
+                                   placeholder="Search by username..." value="{{ search_term }}" autocomplete="off">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                            {% if search_term %}
+                            <a href="{{ url_for('public_users') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Search Results Info -->
+                {% if search_term %}
+                <div class="row mb-3">
+                    <div class="col">
+                        <p class="text-muted">
+                            {% if users|length > 0 %}
+                                Found {{ users|length }} user{{ 's' if users|length != 1 else '' }} matching "{{ search_term }}"
+                            {% else %}
+                                No users found matching "{{ search_term }}"
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Users Grid -->
+                {% if users and users|length > 0 %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for user in users %}
+                    <div class="col">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                            <!-- Profile Image -->
+                            <div class="card-body text-center p-4">
+                                <div class="mb-3">
+                                    {% if user.profile_image %}
+                                    <img src="/static/uploads/{{ user.profile_image }}"
+                                         class="img-fluid rounded-circle"
+                                         style="width: 100px; height: 100px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-secondary rounded-circle mx-auto"
+                                         style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user fa-2x text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- User Info -->
+                                <h5 class="card-title fw-bold mb-1">@{{ user.username }}</h5>
+
+                                {% if user.first_name or user.last_name %}
+                                <p class="text-muted mb-2">
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </p>
+                                {% endif %}
+
+                                {% if user.location %}
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ user.location }}
+                                </p>
+                                {% endif %}
+
+                                <!-- Bio/Description -->
+                                {% if user.personal_description %}
+                                <p class="card-text text-muted mb-3" style="font-size: 0.9rem;">
+                                    {{ user.personal_description[:100] }}
+                                    {% if user.personal_description|length > 100 %}...{% endif %}
+                                </p>
+                                {% endif %}
+
+                                <!-- Stats -->
+                                <div class="row text-center mb-3">
+                                    <div class="col">
+                                        <div class="fw-bold">{{ user.follower_count }}</div>
+                                        <small class="text-muted">Followers</small>
+                                    </div>
+                                    <div class="col">
+                                        <div class="fw-bold">{{ user.following_count }}</div>
+                                        <small class="text-muted">Following</small>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button -->
+                                <div class="d-grid">
+                                    <a href="{{ url_for('view_public_profile', user_id=user.user_id) }}"
+                                       class="btn btn-primary">
+                                        <i class="fas fa-user me-2"></i>View Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- No Users Found -->
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-5x mb-4" style="color: #ccc;"></i>
+                    {% if search_term %}
+                    <h3 class="text-muted">No users found</h3>
+                    <p class="text-muted">Try searching with different keywords or check spelling.</p>
+                    {% else %}
+                    <h3 class="text-muted">No public profiles available</h3>
+                    <p class="text-muted">Be the first to make your profile public and connect with other travelers!</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Info Section -->
+                <div class="row mt-5">
+                    <div class="col">
+                        <div class="card border-0" style="background-color: rgba(255,255,255,0.7); border-radius: 20px;">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>About Public Profiles
+                                </h5>
+                                <p class="mb-2">
+                                    <strong>Public profiles</strong> allow other travelers to discover and connect with you.
+                                    When your profile is public, other users can:
+                                </p>
+                                <ul class="mb-0">
+                                    <li>View your profile information and travel experiences</li>
+                                    <li>See your recent activities and achievements</li>
+                                    <li>Follow you to stay updated with your journeys</li>
+                                    <li>Find you through username searches</li>
+                                </ul>
+                                <p class="mt-3 mb-0">
+                                    <a href="{{ url_for('community_settings') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-cog me-2"></i>Community Settings
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add search functionality enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const searchForm = document.querySelector('form');
+
+    // Auto-submit form on Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchForm.submit();
+        }
+    });
+
+    // Clear search with Escape key
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            this.focus();
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'userbase.html' %}
+{% block title %}Announcements{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% set active_page = 'announcements_list' %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<section class="container px-5">
+
+    <!-- Announcements - Title -->
+    <section class="mt-2 mb-5 d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="fw-bold">Announcements</h1>
+                <p class="fs-5">See what's new in our community — important announcements, updates, and more.</p>
+        </div>
+
+        <!-- Add Announcement Button - only for Staff -->
+        {% if user_role != 'traveller' %}
+        <div class="mt-2 mt-md-0">
+            <a href="{{ url_for('add_announcement') }}" class="btn btn-primary btn-lg btn-add"><i class="fa fa-plus me-2"></i>Add Announcement</a>
+        </div>
+        {% endif %}
+    </section>
+
+    {% if announcementsList %}
+    <!-- Announcements - Table -->
+    <section class="table-responsive">
+        <table class="table table-hover align-middle custom-hover-table">
+
+            <!-- Table Header -->
+            <thead class="align-middle">
+                <tr>
+                    <th scope="col" class="w-85">Title</th>
+                    <th scope="col" class="w-15">Created Time</th>
+                </tr>
+            </thead>
+
+            <!-- Table Body -->
+            <tbody>
+                {% for announcement in announcementsList %}
+                    <tr class="{% if announcement['is_read'] == 0 %}announcement-unread{% else %}announcement-read{% endif %}">
+                        <td class="p-3">
+                            <a href="{{ url_for('announcements_detail', announcement_id = announcement.announcement_id) }}" class="text-link">
+                                {% if announcement['title'] == 'Achievement Unlocked' %}
+                                    Achievement Unlocked: 
+                                    {{ announcement['achievement_name'] if announcement['achievement_name'] else '(Unknown)' }}
+                                {% else %}
+                                    {{ announcement['title'] }}
+                                {% endif %}
+                                {% if announcement['is_read'] == 0 %}
+                                    <span class="badge bg-warning text-dark ms-2">Unread</span>
+                                {% else %}
+                                    <span class="badge bg-secondary ms-2">Read</span>
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td class="p-3">
+                            {# Convert UTC to NZT and display in 12-hour format with am/pm #}
+                            {{ announcement['created_time'].astimezone(pytz.timezone('Pacific/Auckland')).strftime('%d %b %Y, %I:%M %p') if announcement['created_time'] else '' }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </section>
+    
+    {% else %}
+        <!-- No announcements message -->
+        <div class="empty-state">
+            <i class="bi bi-megaphone"></i>
+            <h3>No announcements available yet.</h3>
+        </div>
+    {% endif %}
+
+</section>
+
+{% endblock %}

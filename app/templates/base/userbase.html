@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>{% block title %}{% endblock %} - Journey Log</title>
+
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+		<script src="{{ url_for('static', filename='js/util.js') }}"></script>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    </head>
+	<body>
+		<!-- UI style -->
+		<style>
+            body {
+              background-color: #f5f5f5;
+            }
+
+            a.text-dark.nav-link:active, .nav-link:hover, .nav-link.active{
+                color: #e55b4c !important;
+            }
+
+			a{
+				color: #1D1D1D;
+				text-decoration: none;
+			}
+
+			.text-link:hover{
+				color: #e55b4c !important;
+			}
+
+			.nav-link{
+				font-size: 18px;
+			}
+            /* font style */
+            a, h1, h2, h3, h4, h5, h6, .alert-danger, .btn, th {
+                font-family: Futura, 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            }
+
+            p{
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+            }
+
+			h1, h2, h3, h4, h5, h6, .nav-link, .fw-bold{
+				color: #1D1D1D;
+			}
+			.text-muted{
+				color: #646464 !important;
+			}
+
+			.text-hint{
+				color:#e55b4c !important;
+				margin-top: .25rem;
+				font-size: .875em
+			}
+			
+			.alert-danger{
+			color: #c12723;
+				background: #f0cbca;
+				border: 1px solid #c12723;
+				padding: 12px 20px;
+			}
+
+			::placeholder {
+				font-size: 12px;
+				color: #a0a0a0 !important;
+			}
+
+			.fs-5{
+				font-size: 14px !important;
+			}
+
+			.fs-dashboard-title{
+				font-size: 32px;
+			}
+
+			@media (min-width: 1200px){
+			.fs-dashboard-title{
+				font-size: 48px;
+			}}
+			.card-dashboard{
+				border-radius: 32px;
+				border: none;
+				padding: 3.2em;
+				margin: 0.4em;
+			}
+
+			/* text */
+			.p-announce{
+				line-height: 1.6;
+				color:#4d4d4d;
+				font-size: 13px;
+			}
+
+			/* Nav bar */	
+			.navbar-nav{
+				font-size: 1.4rem;
+			}
+
+			li.nav-item {
+				padding-right: .4rem;
+			}
+
+			i.bi:active {
+				color: #e55b4c !important;
+			}
+			
+			/* base */
+			@media (max-width: 768px){
+			.img-logo{
+				width: 160px !important;
+			}}
+
+			@media (max-width: 768px){
+			.navbar{
+				margin: 2rem !important;
+				padding: 1.6rem 0.8rem !important;
+			}}
+
+			@media (max-width: 768px){
+			.sec-flash-message{
+				padding-top: 80px !important;
+			}}
+
+			@media (max-width: 768px){
+			.px-5 {
+				padding-right: 2rem !important;
+				padding-left: 2rem !important;
+			}}
+
+			@media (max-width: 768px){
+				ul.navbar-nav {
+				padding-left: 0px !important;
+			}}
+
+			@media (max-width: 768px){
+			.navbar-collapse{
+				padding-top: 20px;
+			}}
+
+			@media (max-width: 768px){
+			.card-dashboard{
+				padding: 2em;
+			}}
+        </style>
+
+        <div class="fixed-top" style="background-color: #f5f5f5; height: 3rem"></div>
+		{% if session['loggedin'] %}
+			<nav class="navbar navbar-expand-sm navbar-light fixed-top bg-white m-5 p-2" style="border-radius: 60px;">
+				<div class="container-fluid px-5">
+					<a class="navbar-brand" href="{{ url_for('home') }}">
+						<img src="/static/logo.png" class="img-fluid img-logo" style="width: 200px;" alt="logo">
+					</a>
+					<button class="navbar-toggler " type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav me-auto ps-4 py-2">
+							<li class="nav-item py-2">
+								<h4 class="fw-bold m-0"><a class="nav-link{{ ' active' if active_page == 'myjourney' else '' }}" href="{{ url_for('myjourney') }}">My Trips</a></h4>
+							</li>
+							<!-- public journeys -->
+							<li class="nav-item py-2">
+								<h4 class="fw-bold m-0"><a class="nav-link{{ ' active' if active_page == 'public_journeys' else '' }}" href="{{ url_for('public_journeys') }}">Explore</a></h4>
+							</li>
+
+							<!-- Community Features -->
+							<li class="nav-item p-2">
+								<h4 class="fw-bold m-0"><a class="nav-link{{ ' active' if active_page == 'public_users' else '' }}" href="{{ url_for('public_users') }}">Community</a></h4>
+							</li>
+
+							<!-- User Management -->
+							{% if session['role'] == 'admin' %}
+								<li class="nav-item dropdown py-2">
+									<h4 class="fw-bold m-0">
+										<a class="nav-link dropdown-toggle{{ ' active' if active_page in ['all_users', 'staff_users', 'restricted_users'] else '' }}" href="#" id="userDropdownMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											Users
+										</a>
+
+										<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
+											<li><a class="dropdown-item" href="{{ url_for('all_users') }}">All User</a></li>
+											<li><a class="dropdown-item" href="{{ url_for('system_users') }}">Staff</a></li>
+											<li><a class="dropdown-item" href="{{ url_for('restricted_users') }}">Restricted</a></li>
+										</ul>
+									</h4>
+								</li>
+							{% endif %}
+							
+							<!-- User Management -->
+							{% if session['role'] != 'traveller' %}
+								<li class="nav-item dropdown py-2">
+									<h4 class="fw-bold m-0">
+										<a class="nav-link dropdown-toggle{{ ' active' if active_page in ['hidden_journey'] else '' }}" href="#" id="staffToolsDropdownMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											Staff Tools
+										</a>
+										<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
+											<li><a class="dropdown-item" href="{{ url_for('hidden_journeys') }}">Hidden Journeys</a></li>
+											<!-- Moderation -->
+											<li class="dropdown-item"><a class="nav-link{{ ' active' if active_page == 'reported_comments' else '' }}" href="{{ url_for('reported_comments') }}">Moderation</a></li>
+										</ul>
+
+									</h4>
+								</li>
+							{% endif %}
+
+							<!-- Departure Board -->
+							{% if session['subscription_status'] != 'Free' %}
+								<li class="nav-item py-2">
+									<h4 class="fw-bold m-0"><a class="nav-link{{ ' active' if active_page == 'departure_board' else '' }}" href="{{ url_for('departure_board') }}">Departure Board</a></h4>
+								</li>
+							{% endif %}
+						</ul>
+						<ul class="navbar-nav me-auto">
+						</ul>
+						<ul class="navbar-nav gap-2">
+							<li class="nav-item d-flex align-items-center">
+								<a class="nav-link{ ' active' if active_page == 'announcements_list' else '' } ms-2" href="{{ url_for('announcements_list') }}">
+									<i class="bi bi-megaphone-fill fs-2" style="color: #ccc;"></i>
+								</a>
+							</li>
+							<li class="nav-item p-2">
+								<h4 class="fw-bold m-0">
+									<a class="nav-link{{ ' active' if active_page == 'messages' else '' }} position-relative"
+									href="{{ url_for('messages_inbox') }}"
+									title="Messages">
+										<i class="fas fa-envelope fa-lg"></i>
+										<span id="unreadBadge"
+											class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+											style="display: none; font-size: 0.6rem; min-width: 18px; height: 18px; line-height: 18px;">
+										</span>
+									</a>
+								</h4>
+							</li>
+							<li class="nav-item p-0">
+								<a class="nav-link{{ ' active' if active_page == 'profile' else '' }}" href="{{ url_for('profile') }}">
+									<img src="/static/uploads/{{ session['profile_image'] }}"
+										class="img-fluid rounded-circle"
+										style="width: 50px; height: 50px; object-fit: cover;"
+										onError="this.style.display='none'; this.nextElementSibling.style.display='block';">
+									<div class="bg-secondary rounded-circle" style="width: 50px; height: 50px; display: none;"></div>
+								</a>
+							</li>
+							<li class="nav-item d-flex align-items-center">
+								<button style="border:none; background:none; padding:0; margin-left: 4px"
+								onclick="showAlertModal('logoutModal', 'Confirm Logout', 'Warning', 'Are you sure to logout?', function(e) {
+									e.preventDefault();
+									const modalEl = document.getElementById('logoutModal');
+									const modalInstance = bootstrap.Modal.getInstance(modalEl);
+									if (modalInstance) {
+									modalInstance.hide();
+									}
+									window.location.href = '{{ url_for('logout') }}';
+								})">
+								<i class="fas fa-sign-out-alt fa-2x" style="color:#ccc;"></i>
+								</button>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</nav>
+		{% endif %}
+
+		<!-- FLash Message -->
+		<section class="content sec-flash-message" style="padding-top: 120px;">
+			<div class="container mx-auto py-4">
+				{% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages %}
+						{% for category, message in messages %}
+							{% if category == 'success' %}
+								<div class="alert alert-success text-center col-8 mx-auto fs-5 fw-bold">{{ message }}</div>
+							{% else %}
+								<div class="alert alert-danger text-center col-8 mx-auto fs-5 fw-bold">{{ message }}</div>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				{% endwith %}
+			</div>
+		  </section>
+
+		<main>
+			{% block content %}{% endblock %}
+            {% block scripts %}{% endblock %}
+		</main>
+
+        {% set modal_id = 'logoutModal' %}
+        {% include 'components/modal.html' %}
+
+	</body>
+
+<script>
+// Check for unread messages every 30 seconds
+function checkUnreadMessages() {
+    fetch('/api/messages/unread_count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('unreadBadge');
+            if (badge && data.unread_count > 0) {
+                badge.textContent = data.unread_count;
+                badge.style.display = 'inline';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error checking unread messages:', error));
+}
+
+// Check immediately and then every 30 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    checkUnreadMessages();
+    setInterval(checkUnreadMessages, 30000);
+});
+</script>
+
+</html>

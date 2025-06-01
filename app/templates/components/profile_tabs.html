@@ -1,0 +1,23 @@
+<ul class="nav nav-tabs nav-fill" id="userProfileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a href="{{ url_for('profile') }}"
+            class="nav-link text-tab {% if active_tab == 'profile' %}active{% endif %}"
+            id="profile-tab" role="tab">
+            Profile
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a href="{{ url_for('profile_subscription') }}"
+            class="nav-link text-tab {% if active_tab == 'subscription' %}active{% endif %}"
+            id="subscription-tab" role="tab">
+            Subscription
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a href="{{ url_for('community_settings') }}" 
+            class="nav-link text-tab {% if active_tab == 'community_settings' %}active{% endif %}" 
+            id="settings-tab" role="tab">
+            Settings
+        </a>
+    </li>
+</ul>

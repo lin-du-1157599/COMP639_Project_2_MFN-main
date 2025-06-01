@@ -1,0 +1,108 @@
+{% extends "base/userbase.html" %}
+{% block title %}Public Journeys{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% set active_page = 'public_journeys' %}
+{% block content %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const keywordInput = document.getElementById('keyword');
+        const cancelButton = document.getElementById('cancelSearch');
+
+        // Show the cancel button if there is content in the input field
+        if (keywordInput.value.trim() !== '') {
+            cancelButton.style.display = 'inline-block';
+        }
+
+        // Show the cancel button when typing in the input field
+        keywordInput.addEventListener('input', function() {
+            if (keywordInput.value.trim() !== '') {
+                cancelButton.style.display = 'inline-block';
+            } else {
+                cancelButton.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+
+        <!-- Public Journeys List -->
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Public Journeys - Title -->
+                <div class="row">
+                    <div class="col mt-2 mb-2">
+                        <h1 class="fw-bold">Public Journeys</h1>
+                        <p class="fs-5">Explore journeys shared by other travelers from around the world.</p>
+                    </div>
+                </div>
+                <form action="{{ url_for('search_public_journey') }}" method="GET">
+                    <div class="col-lg-12 d-md-flex mb-2 gap-3">
+                        <input type="text" name="keyword" id="keyword" class="form-control form-control-lg mb-3" placeholder="Search by" value="{{ keyword }}">
+                        <select name="searchcat" id="searchcat" class="form-select form-select-lg  mb-3">
+                            <option value="journey_text" {% if searchcat == 'journey_text' %}selected{% endif %}>Title or Description</option>
+                            <option value="location" {% if searchcat == 'location' %}selected{% endif %}>Location</option>
+                        <input type="submit" class="btn btn-primary btn-lg col-md-2 col-12 mb-3" value="Search">
+                        <a href="{{ url_for('public_journeys') }}" class="btn btn-secondary btn-lg col-md-2 col-12 mb-3" id="cancelSearch" style="display: none;">Cancel</a>
+                    </div>
+                </form>
+                {% if journeyList and journeyList|length > 0 %}
+                <div class="row row-cols-1 row-cols-md-2 g-5">
+                    <!-- Public Journeys display with card -->
+                    {% for journey in journeyList %}
+                    <div class="col-sm-6 align-items-center">
+                        <div class="card border-0 rounded-5 h-100 p-4">
+                            <div class="card-body">
+                                <div class="pb-2">
+                                    <h6><span class="badge rounded-pill bg-primary">Public</span></h6>
+                                </div>
+
+                                <h2 class="card-title fw-bold m-0">{{ journey.title|safe }}</h2>
+
+                                <!-- Author info -->
+                                <h6 class="card-subtitle mb-2 pt-2" style="color: #a0a0a0;">
+                                    By:
+                                    {% if journey.first_name and journey.last_name %}
+                                    {{ journey.first_name }} {{ journey.last_name }} (@{{ journey.username }}{% if
+                                    journey.user_id == session['user_id'] %}/You{% endif %})
+                                    {% else %}
+                                    @{{ journey.username }}{% if journey.user_id == session['user_id'] %}/You{% endif %}
+                                    {% endif %}
+                                </h6>
+
+                                <!-- Updated date -->
+                                <h6 class="card-subtitle mb-3 pb-3" style="color: #a0a0a0;">
+                                    Updated: {{ journey.update_date.strftime('%d %b %Y') }}
+                                </h6>
+
+                                <p class="card-text">
+                                    {{ journey.description[:120]|safe }}
+                                    {% if journey.description|length > 120 %}...
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="card-footer bg-white border-0 rounded-5">
+                                <div class="text-center py-2">
+                                    <a href="{{ url_for('view_journey', journey_id=journey.journey_id, mode='public') }}" class="btn btn-outline-primary btn-lg w-100">View Journey</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-map-marked-alt fa-5x mb-4" style="color: #ccc;"></i>
+                    <h3 class="text-muted">No public journeys have been shared yet</h3>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

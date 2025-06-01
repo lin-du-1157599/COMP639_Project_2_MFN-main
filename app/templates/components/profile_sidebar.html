@@ -1,0 +1,61 @@
+<!-- profile image -->
+{% if profile.profile_image %}
+<div class="position-relative mb-3 mx-auto align-items-center" style="width: 180px; height: 180px; overflow: hidden;">
+    <img src="/static/uploads/{{ profile.profile_image }}" class="img-fluid img-thumbnail rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+
+    <!-- Preview Button -->
+    <a href="javascript:void(0);"
+    class="position-absolute start-50 translate-middle bottom-0 btn btn-light btn-sm"
+    style="padding: 8px 16px; margin-bottom: 8px;"
+    onclick="showPhotoModal('/static/uploads/{{ profile.profile_image }}', 'Preview Avatar')">
+        <i class="bi bi-eye-fill"></i>
+        Preview
+    </a>
+</div>
+{% else %}
+<div class="position-relative">
+    <div class="mb-4 mx-auto align-items-center bg-secondary" style="width: 180px; height: 180px; overflow: hidden; border-radius: 100%;">
+        <div class="position-relative d-flex justify-content-center align-items-center bg-secondary" style="width: 180px; height: 180px; overflow: hidden; border-radius: 10px;">
+            <p class="text-white fs-5 m-0">No Avatar</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+    
+<!-- Image upload and remove -->
+<div class="d-flex justify-content-center gap-2">
+    <form action="{{ url_for('remove_image') }}" method="POST">
+        <button type="submit" class="btn btn-custom-outline-red btn-sm">
+            <i class="bi bi-trash me-2"></i>Remove</button>
+    </form>
+            
+
+    <form action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data">
+        <label for="profile_image" class="btn btn-custom-primary btn-sm">
+            <i class="bi bi-upload me-2"></i>Upload</label>
+        <input type="file" class="form-control" id="profile_image" name="profile_image" hidden onchange="this.form.submit()">
+        <div class="invalid-feedback d-block">{{ image_error }}</div>
+    </form>
+</div>
+
+<!-- Profile Details -->
+<div class="text-center align-items-center mt-4 pt-4">
+    <h3 class="fw-bold">{{ profile.first_name }} {{ profile.last_name }}</h3>
+    <h4 style="color: #646464">@{{ profile.username }}
+        <span class="badge bg-secondary ms-2">{{ profile.subscription_status | capitalize }}</span>
+    </h4>
+    {% if profile.subscription_end_date %}
+        <p class="text-muted">
+            Expires on: {{ profile.subscription_end_date.strftime("%d %B, %Y") }}
+        </p>
+    {% endif %}
+</div>
+
+<style>
+@media (min-width: 768px) {
+    .col-md-4 {
+        flex: 0 0 auto;
+        width: 30%;
+    }
+}
+</style>

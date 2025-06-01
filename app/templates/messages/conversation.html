@@ -1,0 +1,340 @@
+{% extends 'userbase.html' %}
+{% block title %}Conversation with {{ other_user.username }}{% endblock %}
+{% set active_page = 'messages' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Conversation Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center">
+                        <a href="{{ url_for('messages_inbox') }}" class="btn btn-outline-secondary me-3">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+
+                        <!-- Other User Profile -->
+                        <div style="width: 50px; height: 50px; overflow: hidden;" class="me-3">
+                            {% if other_user.profile_image %}
+                            <img src="/static/uploads/{{ other_user.profile_image }}"
+                                 class="img-fluid rounded-circle"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                 style="width: 100%; height: 100%;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <h2 class="fw-bold mb-0">
+                                {% if other_user.first_name and other_user.last_name %}
+                                    {{ other_user.first_name }} {{ other_user.last_name }}
+                                {% endif %}
+                                (@{{ other_user.username }})
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Area -->
+                <div class="messages-container mb-4"
+                     style="height: 400px; overflow-y: auto; background: white; padding: 20px; border-radius: 20px; border: 1px solid #ddd;">
+
+                    {% if messages and messages|length > 0 %}
+                        {% for message in messages %}
+                        <div class="message-item mb-3 {% if message.sender_id == session['user_id'] %}text-end{% endif %}"
+                             id="message-{{ message.message_id }}">
+                            <div class="d-inline-block position-relative message-bubble">
+                                <div class="p-3 rounded-3 {% if message.sender_id == session['user_id'] %}bg-primary text-white{% else %}bg-light{% endif %}"
+                                     style="max-width: 70%; word-wrap: break-word;">
+                                    <p class="mb-1">{{ message.content }}</p>
+                                    <small class="{% if message.sender_id == session['user_id'] %}text-white-50{% else %}text-muted{% endif %}">
+                                        {{ message.sent_at.strftime('%d %b %Y, %H:%M') }}
+                                    </small>
+                                </div>
+
+                                <!-- Delete button - conditional display based on user subscription and message ownership -->
+                                {% set show_delete = false %}
+                                {% if session['subscription_status'] != 'Free' or session['role'] != 'traveller' %}
+                                    <!-- Premium users and staff can delete any message (sent or received) -->
+                                    {% set show_delete = true %}
+                                {% elif message.receiver_id == session['user_id'] %}
+                                    <!-- Free travellers can only delete messages they RECEIVED -->
+                                    {% set show_delete = true %}
+                                {% endif %}
+
+                                {% if show_delete %}
+                                <div class="message-actions position-absolute"
+                                     style="top: 5px; {% if message.sender_id == session['user_id'] %}left: -35px;{% else %}right: -35px;{% endif %}">
+                                    <button class="btn btn-sm btn-danger delete-message-btn"
+                                            data-message-id="{{ message.message_id }}"
+                                            data-bs-toggle="tooltip"
+                                            title="Delete message">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <p>No messages yet. Start the conversation!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Message Input -->
+                {% if can_send_messages %}
+                <form action="{{ url_for('send_message', other_user_id=other_user.user_id) }}"
+                      method="POST" class="message-form">
+                    <div class="input-group">
+                        <textarea class="form-control"
+                                  name="content"
+                                  id="messageContent"
+                                  rows="3"
+                                  placeholder="Type your message here..."
+                                  maxlength="1000"
+                                  required
+                                  style="resize: none;"></textarea>
+                        <button type="submit" class="btn btn-primary" style="min-width: 100px;">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Send
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">
+                            <span id="charCount">0</span>/1000 characters
+                        </small>
+                    </div>
+                </form>
+                {% else %}
+                <!-- Subscription Required Message -->
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-lock me-2"></i>
+                    {% if session['subscription_status'] == 'Free' and session['role'] == 'traveller' %}
+                        You need a <a href="{{ url_for('subscription') }}" class="fw-bold">premium subscription</a> to send messages.
+                    {% else %}
+                        Your subscription has expired. <a href="{{ url_for('subscription') }}" class="fw-bold">Renew your subscription</a> to continue messaging.
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Message Confirmation Modal -->
+<div class="modal fade" id="deleteMessageModal" tabindex="-1" aria-labelledby="deleteMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMessageModalLabel">Delete Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Are you sure you want to delete this message?
+                </p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteMessage">
+                    <i class="fas fa-trash me-1"></i>Delete Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageContent = document.getElementById('messageContent');
+    const charCount = document.getElementById('charCount');
+    const messagesContainer = document.querySelector('.messages-container');
+    let messageToDelete = null;
+
+    // Character counter
+    if (messageContent && charCount) {
+        messageContent.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length;
+
+            if (length > 1000) {
+                charCount.classList.add('text-danger');
+            } else {
+                charCount.classList.remove('text-danger');
+            }
+        });
+    }
+
+    // Auto-scroll to bottom of messages
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Auto-focus on message input
+    if (messageContent) {
+        messageContent.focus();
+    }
+
+    // Handle Enter key to send message (Shift+Enter for new line)
+    if (messageContent) {
+        messageContent.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const form = document.querySelector('.message-form');
+                if (form && this.value.trim()) {
+                    form.submit();
+                }
+            }
+        });
+    }
+
+    // Handle delete message button clicks
+    const deleteButtons = document.querySelectorAll('.delete-message-btn');
+    console.log(`Found ${deleteButtons.length} delete buttons`);
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            messageToDelete = this.getAttribute('data-message-id');
+            const modal = new bootstrap.Modal(document.getElementById('deleteMessageModal'));
+            modal.show();
+        });
+    });
+
+    // Handle delete confirmation
+    document.getElementById('confirmDeleteMessage').addEventListener('click', function() {
+        if (!messageToDelete) return;
+
+        const button = this;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+
+        fetch(`/api/messages/${messageToDelete}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove message from DOM
+                const messageElement = document.getElementById(`message-${messageToDelete}`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteMessageModal'));
+                modal.hide();
+
+                // Show success message
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show';
+                alert.innerHTML = `
+                    ${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                messagesContainer.parentElement.insertBefore(alert, messagesContainer);
+
+                // Auto-hide success message
+                setTimeout(() => {
+                    if (alert.parentElement) {
+                        alert.remove();
+                    }
+                }, 3000);
+            } else {
+                alert(data.error || 'Error deleting message');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting message:', error);
+            alert('Error deleting message. Please try again.');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-trash me-1"></i>Delete Message';
+            messageToDelete = null;
+        });
+    });
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+
+<style>
+.messages-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.message-item {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Message styling - keep it simple */
+.message-bubble {
+    position: relative;
+}
+
+.message-actions .btn {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .message-actions {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        margin-top: 5px;
+        text-align: center;
+    }
+
+    .message-bubble {
+        display: block;
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

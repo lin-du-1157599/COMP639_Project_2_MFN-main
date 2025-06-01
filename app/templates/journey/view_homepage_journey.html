@@ -1,0 +1,249 @@
+{% extends "base/userbase.html" %}
+{% block title %}View Journey{% endblock %}
+{% block content %}
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+        <!-- Journey details header -->
+        <div class="col-md-10 px-2 mb-4">
+            <div class="mb-3" style="aspect-ratio: 16/9; overflow: hidden; border-radius: 20px;">
+                <img src="{% if journey.cover_image %}
+                            {{ url_for('static', filename='uploads/' ~ journey.cover_image) }}
+                          {% else %}
+                            {{ url_for('static', filename='uploads/journey/default_journey_cover_image.jpg') }}
+                          {% endif %}" alt="Cover Image"
+                     class="img-fluid w-100 h-100"
+                     style="object-fit: cover;">
+            </div>
+        
+                <!-- Journey status badge -->
+                <div class="mb-2">
+                    {% if journey.status == 'public' %}
+                    <span class="badge rounded-pill bg-primary">Public</span>
+                    {% elif journey.status == 'private' %}
+                    <span class="badge rounded-pill bg-secondary">Private</span>
+                    {% elif journey.status == 'published' %}
+                    <span class="badge rounded-pill bg-success">Published</span>
+                    {% endif %}
+                </div>
+
+                <!-- Journey title and author info -->
+                <h1 class="fw-bold mb-3">{{ journey.title }}</h1>
+
+                <div class="d-flex align-items-center mb-4">
+                    <!-- Author profile image -->
+                    <div style="width: 50px; height: 50px; overflow: hidden;" class="me-3">
+                        {% if journey.profile_image %}
+                        <img src="/static/uploads/{{ journey.profile_image }}" class="img-fluid rounded-circle"
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                             style="width: 100%; height: 100%;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Author name -->
+                    <div>
+                        <p class="mb-0 fw-bold">
+                            By:
+                            {% if journey.first_name and journey.last_name %}
+                                {{ journey.first_name }} {{ journey.last_name }} (@{{ journey.username }})
+                            {% else %}
+                                @{{ journey.username }}
+                            {% endif %}
+                        </p>
+
+                        <!-- Journey date start -->
+                        <p class="text-muted mb-0">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            {{ journey.start_date.strftime('%d %b %Y') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Journey description -->
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-2">Description</h5>
+                    <p class="mb-0" style="max-width: 100%; word-wrap: break-word; overflow-wrap: break-word;">{{ journey.description }}</p>
+                </div>
+
+                <!-- Journey metadata and action buttons -->
+                <div class="text-muted">
+                    <small>
+                        <i class="far fa-clock me-1"></i>
+                        Last updated: {{ journey.update_date.strftime('%d %b %Y, %H:%M') }}
+                    </small>        
+                </div>
+            </div>
+        </div>
+
+        <!-- Journey timeline -->
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Timeline header with Add Event button -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Journey Timeline</h2>
+                </div>
+
+                {% if events and events|length > 0 %}
+                <div class="position-relative">
+                    <!-- Timeline line -->
+                    <div class="position-absolute h-100 start-50 translate-middle-x"
+                         style="width: 2px; background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.2); z-index: 1;"></div>
+
+                    <!-- Timeline events with alternating sides -->
+                    {% for event in events %}
+                    <div class="row mb-4 position-relative">
+                        <!-- Timeline dot -->
+                        <div class="position-absolute start-50 translate-middle-x"
+                             style="width: 16px; height: 16px; background-color: var(--bs-primary, #16404e); border-radius: 50%; z-index: 2; top: 24px; transform: translateY(-50%);"></div>
+
+                        {% if loop.index is odd %}
+                        <!-- Event date/time (left side for odd-indexed events) -->
+                        <div class="col-6 text-end pe-4" style="padding-top: 24px;">
+                            <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{ event.start_time.strftime('%d %b %Y') }}</p>
+                                    <p class="text-muted mb-0">{{ event.start_time.strftime('%H:%M') }}
+                                    </p>
+                                </div>
+
+                                {% if event.end_time %}
+                                <div class="fw-bold align-self-start"> - </div>
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{ event.start_time.strftime('%d %b %Y') }}</p>
+                                    <p class="text-muted mb-0">{{ event.end_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Event details (right side for odd-indexed events) -->
+                        <div class="col-6 ps-4">
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <h5 class="card-title fw-bold mb-0">{{ event.title }}</h5>
+                                    </div>
+                                    {% if event.location %}
+                                        <div class="mt-2 mb-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ event.location }}
+                                        </div>
+                                    {% endif %}
+
+                                    <p class="card-text">{{ event.description }}</p>
+                                </div>
+
+                                <!-- Event photo -->
+                                {% if event.event_image %}
+                                <div class="card-footer bg-white border-0 pb-3">
+                                    <a href="/static/uploads/{{ event.event_image }}" target="_blank" class="d-block">
+                                        <img src="/static/uploads/{{ event.event_image }}" class="img-fluid rounded"
+                                             style="max-height: 200px; object-fit: cover;">
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                <!-- Comment Section -->
+                                <div class="card-footer bg-white border-0">
+                                    <div class="comment-section">
+                                        <!-- Comments List -->
+                                        <div class="comments-list" id="comments-{{ event.event_id }}">
+                                            <!-- Comments will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% else %}
+                        <!-- Event details (left side for even-indexed events) -->
+                        <div class="col-6 pe-4 text-end">
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold mb-0" style="word-wrap: break-word; overflow-wrap: break-word;">{{ event.title }}</h5>
+                                    {% if event.location %}
+                                        <div class="mt-2 mb-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ event.location }}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <p class="card-text">{{ event.description }}</p>
+                                </div>
+
+                                <!-- Event photo -->
+                                {% if event.event_image %}
+                                <div class="card-footer bg-white border-0 pb-3">
+                                    <a href="/static/uploads/{{ event.event_image }}" target="_blank" class="d-block">
+                                        <img src="/static/uploads/{{ event.event_image }}" class="img-fluid rounded"
+                                             style="max-height: 200px; object-fit: cover;">
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                <div class="card-footer bg-white border-0">
+                                    <div class="comment-section">
+                                        <!-- Comments List -->
+                                        <div class="comments-list" id="comments-{{ event.event_id }}">
+                                            <!-- Comments will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event date/time (right side for even-indexed events) -->
+                        <div class="col-6 text-end ps-4" style="padding-top: 24px;">
+                            <div class="d-flex justify-content-start align-items-center flex-wrap gap-2">
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{ event.start_time.strftime('%d %b %Y') }}</p>
+                                    <p class="text-muted mb-0">{{ event.start_time.strftime('%H:%M') }}
+                                    </p>
+                                </div>
+
+                                {% if event.end_time %}
+                                <div class="fw-bold align-self-start"> - </div>
+                                <div class="text-start">
+                                    <p class="mb-0 fw-bold text-nowrap">{{ event.start_time.strftime('%d %b %Y') }}</p>
+                                    <p class="text-muted mb-0">{{ event.end_time.strftime('%H:%M') }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- No events message -->
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-5x mb-4" style="color: #ccc;"></i>
+                    <h3 class="text-muted">No timeline events available</h3>
+                    <p class="text-muted">This journey doesn't have any events or photos yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Lightbox Modal -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalLabel">Photo View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

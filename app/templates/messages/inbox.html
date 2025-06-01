@@ -1,0 +1,376 @@
+{% extends 'userbase.html' %}
+{% block title %}Messages{% endblock %}
+{% set active_page = 'messages' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Messages Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="fw-bold mb-0">Messages</h1>
+                        <p class="fs-5 text-muted">Your private conversations</p>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- New Message Button -->
+                        {% if session['subscription_status'] != 'Free' or session['role'] != 'traveller' %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newMessageModal">
+                            <i class="fas fa-plus me-2"></i>New Message
+                        </button>
+                        {% endif %}
+
+                        <!-- Subscription status info for free users -->
+                        {% if session['subscription_status'] == 'Free' and session['role'] == 'traveller' %}
+                        <div class="alert alert-info mb-0" style="max-width: 300px;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>Upgrade to premium to send messages</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if conversations and conversations|length > 0 %}
+                <!-- Conversations List -->
+                <div class="row">
+                    {% for conversation in conversations %}
+                    <div class="col-12 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <!-- Profile Image -->
+                                    <div style="width: 50px; height: 50px; overflow: hidden;" class="me-3">
+                                        {% if conversation.profile_image %}
+                                        <img src="/static/uploads/{{ conversation.profile_image }}"
+                                             class="img-fluid rounded-circle"
+                                             style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                             style="width: 100%; height: 100%;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Conversation Info -->
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="fw-bold mb-1 {% if conversation.unread_count > 0 %}text-primary{% endif %}">
+                                                    {% if conversation.first_name and conversation.last_name %}
+                                                        {{ conversation.first_name }} {{ conversation.last_name }}
+                                                    {% endif %}
+                                                    (@{{ conversation.username }})
+                                                </h5>
+                                                <p class="mb-1 text-muted {% if conversation.unread_count > 0 %}fw-bold{% endif %}">
+                                                    {{ conversation.last_message[:80] }}
+{% if conversation.last_message|length > 80 %}...{% endif %}
+                                                </p>
+                                                <small class="text-muted">
+                                                    {{ conversation.last_message_time.strftime('%d %b %Y, %H:%M') }}
+                                                </small>
+                                            </div>
+
+                                            <!-- Unread Badge -->
+                                            {% if conversation.unread_count > 0 %}
+                                            <span class="badge bg-primary rounded-pill">
+                                                {{ conversation.unread_count }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Button -->
+                                    <div class="ms-3">
+                                        <a href="{{ url_for('view_conversation', other_user_id=conversation.other_user_id) }}"
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-comments me-1"></i>
+                                            View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- No Messages -->
+                <div class="text-center py-5">
+                    <i class="fas fa-envelope fa-5x mb-4" style="color: #ccc;"></i>
+                    <h3 class="text-muted">No messages yet</h3>
+                    <p class="text-muted">Your private conversations will appear here</p>
+                    {% if session['subscription_status'] == 'Free' and session['role'] == 'traveller' %}
+                    <p class="text-muted">
+                        <a href="{{ url_for('subscription') }}" class="btn btn-primary">
+                            Upgrade to Premium
+                        </a> to start messaging other users
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal fade" id="newMessageModal" tabindex="-1" aria-labelledby="newMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newMessageModalLabel">
+                    <i class="fas fa-envelope me-2"></i>New Message
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newMessageForm">
+                    <!-- Recipient Search -->
+                    <div class="mb-3">
+                        <label for="recipientSearch" class="form-label fw-bold">To:</label>
+                        <div class="position-relative">
+                            <input type="text"
+                                   class="form-control form-control-lg"
+                                   id="recipientSearch"
+                                   placeholder="Search for users by name or username..."
+                                   autocomplete="off">
+                            <div id="searchResults" class="position-absolute w-100 bg-white border rounded shadow-sm"
+                                 style="top: 100%; z-index: 1000; max-height: 200px; overflow-y: auto; display: none;">
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedRecipientId" name="recipient_id">
+                        <div id="selectedRecipient" class="mt-2" style="display: none;">
+                            <span class="badge bg-primary fs-6 p-2">
+                                <span id="selectedRecipientName"></span>
+                                <button type="button" class="btn-close btn-close-white ms-2"
+                                        onclick="clearRecipient()" aria-label="Remove recipient"></button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="mb-3">
+                        <label for="messageContent" class="form-label fw-bold">Message:</label>
+                        <textarea class="form-control"
+                                  id="messageContent"
+                                  name="content"
+                                  rows="4"
+                                  placeholder="Type your message here..."
+                                  maxlength="1000"
+                                  required></textarea>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small class="text-muted">
+                                <span id="charCountModal">0</span>/1000 characters
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendMessageBtn" disabled>
+                    <i class="fas fa-paper-plane me-1"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const recipientSearch = document.getElementById('recipientSearch');
+    const searchResults = document.getElementById('searchResults');
+    const selectedRecipientId = document.getElementById('selectedRecipientId');
+    const selectedRecipient = document.getElementById('selectedRecipient');
+    const selectedRecipientName = document.getElementById('selectedRecipientName');
+    const messageContent = document.getElementById('messageContent');
+    const charCountModal = document.getElementById('charCountModal');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+
+    let searchTimeout;
+
+    // Character counter for modal
+    if (messageContent && charCountModal) {
+        messageContent.addEventListener('input', function() {
+            const length = this.value.length;
+            charCountModal.textContent = length;
+
+            if (length > 1000) {
+                charCountModal.classList.add('text-danger');
+            } else {
+                charCountModal.classList.remove('text-danger');
+            }
+
+            updateSendButton();
+        });
+    }
+
+    // Search functionality
+    if (recipientSearch) {
+        recipientSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displaySearchResults(data.users);
+                    })
+                    .catch(error => {
+                        console.error('Error searching users:', error);
+                        searchResults.style.display = 'none';
+                    });
+            }, 300);
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!recipientSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+    }
+
+    // Display search results
+    function displaySearchResults(users) {
+        if (users.length === 0) {
+            searchResults.innerHTML = '<div class="p-3 text-muted">No users found</div>';
+        } else {
+            searchResults.innerHTML = users.map(user => `
+                <div class="search-result-item p-3 border-bottom"
+                     style="cursor: pointer;"
+                     onclick="selectRecipient(${user.user_id}, '${user.username}', '${user.display_name}', '${user.profile_image || ''}')">
+                    <div class="d-flex align-items-center">
+                        <div style="width: 40px; height: 40px; overflow: hidden;" class="me-3">
+                            ${user.profile_image ?
+                                `<img src="/static/uploads/${user.profile_image}" class="img-fluid rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                `<div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 100%; height: 100%;"><i class="fas fa-user text-white"></i></div>`
+                            }
+                        </div>
+                        <div>
+                            <div class="fw-bold">${user.display_name}</div>
+                            <small class="text-muted">@${user.username}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        searchResults.style.display = 'block';
+    }
+
+    // Select recipient
+    window.selectRecipient = function(userId, username, displayName, profileImage) {
+        selectedRecipientId.value = userId;
+        selectedRecipientName.textContent = `${displayName} (@${username})`;
+        selectedRecipient.style.display = 'block';
+        recipientSearch.style.display = 'none';
+        searchResults.style.display = 'none';
+        updateSendButton();
+    };
+
+    // Clear recipient
+    window.clearRecipient = function() {
+        selectedRecipientId.value = '';
+        selectedRecipient.style.display = 'none';
+        recipientSearch.style.display = 'block';
+        recipientSearch.value = '';
+        recipientSearch.focus();
+        updateSendButton();
+    };
+
+    // Update send button state
+    function updateSendButton() {
+        const hasRecipient = selectedRecipientId.value !== '';
+        const hasMessage = messageContent.value.trim() !== '';
+        const validLength = messageContent.value.length <= 1000;
+
+        sendMessageBtn.disabled = !(hasRecipient && hasMessage && validLength);
+    }
+
+    // Send message
+    sendMessageBtn.addEventListener('click', function() {
+        const formData = new FormData();
+        formData.append('recipient_id', selectedRecipientId.value);
+        formData.append('content', messageContent.value.trim());
+
+        // Disable button during sending
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+
+        fetch('/messages/compose', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and redirect to conversation
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newMessageModal'));
+                modal.hide();
+                window.location.href = data.redirect_url;
+            } else {
+                alert(data.error || 'Error sending message');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Message';
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            alert('Error sending message. Please try again.');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Message';
+        });
+    });
+
+    // Reset modal when it's closed
+    document.getElementById('newMessageModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('newMessageForm').reset();
+        clearRecipient();
+        charCountModal.textContent = '0';
+        sendMessageBtn.disabled = true;
+        sendMessageBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Message';
+    });
+});
+</script>
+
+<style>
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Custom scrollbar for search results */
+#searchResults::-webkit-scrollbar {
+    width: 6px;
+}
+
+#searchResults::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#searchResults::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+#searchResults::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+</style>
+
+{% endblock %}

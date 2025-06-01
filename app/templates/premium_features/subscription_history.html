@@ -1,0 +1,126 @@
+{% extends "base/userbase.html" %}
+{% block title %}Subscription History{% endblock %}
+
+{% set active_tab = 'subscription_history' %}
+
+{% block content %}
+
+<div class="container px-5">
+
+    <!-- Subscription History - Title -->
+    <div class="pb-4">
+        <h1 class="fw-bold">Subscription History</h1>
+        <p class="fs-5">View your past subscription plans and payment history.</p>
+    </div>
+
+    <!-- Success/error messages div -->
+    <section id="alert-container" style="display: none;" class="alert alert-dismissible fade show mb-4" role="alert">
+        <span id="alert-message"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </section>
+
+    {% if subscriptions %}
+    <!-- Subscription History - Table -->
+    <section class="table-responsive">
+        <table class="table table-hover align-middle custom-hover-table">
+
+            <!-- Table Header -->
+            <thead class="align-middle">
+                <tr>
+                    <th scope="col" class="w-20 p-3">Plan</th>
+                    <th scope="col" class="w-15 p-3">Duration</th>
+                    <th scope="col" class="w-15 p-3">Total Amounts</th>
+                    <th scope="col" class="w-20 p-3">Subscription Date</th>
+                    <th scope="col" class="w-30 p-3">Receipt</th>
+                </tr>
+            </thead>
+
+            <!-- Table Body -->
+            <tbody>
+                {% for subscription in subscriptions %}
+                    <tr>
+                        <!-- Body: Plan Name -->
+                        <td>
+                            {% if subscription.is_admin_grantable %}   
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-gift me-2 custom-orange"></i>Admin Granted
+                            {% elif subscription.subscription_name in[ 'One Month', 'One Quarter', 'One Year'] %}
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-star-fill me-2 custom-yellow"></i>{{ subscription.subscription_name }}
+                            {% else %}
+                                <h6 class="fw-bold mb-0">
+                                    <i class="bi bi-gem me-2 custom-blue"></i>{{ subscription.subscription_name }}
+                            {% endif %}
+                        </td>
+
+                        <!-- Body: Duration -->
+                        <td>{{ subscription.duration_months }} month{{ 's' if subscription.duration_months > 1 else '' }}</td>
+
+                        <!-- Body: Total Amounts -->
+                        {% if not subscription.is_free_trial and not subscription.is_admin_grantable %}
+                            <td>
+                                <p class="fw-bold mb-0">NZD ${{ subscription.amount_paid }}</p>
+                            {% if subscription.gst_amount != 0.00 %}
+                                <p class="text-note mb-0">Incl. GST</p>
+                            {% endif %}
+                            </td>
+                        {% else %}
+                            <td>-</td>
+                        {% endif %}
+                        
+                        <!-- Body: Subscription Date -->
+                        <td>{{ subscription.created_at.strftime('%d %B, %Y at %H:%M') }}</td>
+                        
+                        <!-- Body: Receipt Action-->
+                        <td>
+                            {% if not subscription.is_free_trial and not subscription.is_admin_grantable %}
+                                <a href="{{ url_for('view_receipt', user_subscription_id=subscription.user_subscription_id, user_id = profile.user_id) }}" class="custom-blue-link me-4 mb-2">
+                                    <i class="bi bi-eye me-2"></i>View
+                                </a>
+                                <a href="{{ url_for('download_receipt_pdf', user_subscription_id=subscription.user_subscription_id) }}" class="custom-blue-link me-4 mb-2">
+                                    <i class="bi bi-download me-2"></i>Download
+                                </a>
+                                <a type="button" class="custom-blue-link"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#paymentCollapse{{ loop.index }}"
+                                            aria-expanded="false"
+                                            aria-controls="paymentCollapse{{ loop.index }}">
+                                        <i class="bi bi-credit-card"></i> Payment Info
+                            </a>
+                            {% endif %}
+                        </td>
+                        
+                    </tr>
+
+                    <!-- Body: Payment Details Collapse -->
+                    {% if not subscription.is_free_trial and not subscription.is_admin_grantable %}
+                        <tr class="collapse" id="paymentCollapse{{ loop.index }}">
+                            <td colspan="5">
+                                <div><strong>Amount Paid:</strong> NZD ${{ '%.2f'|format(subscription.amount_paid) }}</div>
+                                {% if subscription.billing_country == 'NZ' %}
+                                    <div><strong>Gst Amount:</strong> NZD ${{ '%.2f'|format(subscription.gst_amount) }}</div>
+                                {% endif %}
+                                <div><strong>Start Date:</strong> {{ subscription.start_date.strftime('%d %B, %Y') }}</div>
+                                <div><strong>End Date:</strong> {{ subscription.end_date.strftime('%d %B, %Y') }}</div>
+                                <div><strong>Billing Country:</strong> {{ subscription.billing_country }} </div>
+                                <div><strong>Billing Address:</strong> {{ subscription.billing_address }} </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    {% else %}
+    <!-- No subscription history message -->
+    <div class="empty-state">
+        <i class="bi bi-card-list"></i>
+        <h3>No subscription history yet.</h3>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
