@@ -1,0 +1,185 @@
+{% extends 'userbase.html' %}
+{% block title %}Edit Event{% endblock %}
+{% if mode == 'public' %}
+{% set active_page = 'public_journeys' %}
+{% elif mode == 'all' %}
+{% set active_page = 'myjourney' %}
+{% endif %}
+{% block content %}
+
+<div class="container px-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 px-2">
+            <div class="p-5" style="background-color: #f0f0f0; border-radius: 40px;">
+                <!-- Edit Event - Title -->
+                <div>
+                    <h1 class="fw-bold pb-2">Edit Event</h1>
+                    <p class="fs-5">Update the details of your event.</p>
+                </div>
+
+                <!-- Edit Event - Form -->
+                <div class="py-4">
+                    <form action="/edit_event/{{ event.id }}" method="post" enctype="multipart/form-data" id="edit-event-form">
+                        <input type="hidden" name="removed_existing_images" id="removed-existing-images" value="[]">
+                        <input type="hidden" name="mode" value="{{ mode }}">
+                        
+                        <label for="title">Title:</label>
+                        <input type="text" name="title" id="title" value="{{ event.title }}" required>
+                        <br>
+                    
+                        <label for="description">Description:</label>
+                        <textarea name="description" id="description">{{ event.description }}</textarea>
+                        <br>
+                    
+                        <label for="start_date">Start Date:</label>
+                        <input type="date" name="start_date" id="start_date" value="{{ event.start_date }}">
+                        <br>
+                    
+                        <label for="end_date">End Date:</label>
+                        <input type="date" name="end_date" id="end_date" value="{{ event.end_date }}">
+                        <br>
+                    
+                        <label for="event_images">Upload Images:</label>
+                        <input type="file" id="event_images" multiple accept="image/*">
+                        <br>
+                    
+                        <div id="existing-images">
+                            {% for img in event.images %}
+                                <div class="image-wrapper" data-filename="{{ img.filename }}">
+                                    <img src="{{ url_for('uploaded_file', filename=img.filename) }}" alt="Image" style="width:100px; height:100px;">
+                                    <button type="button" class="delete-existing-image-btn">Delete</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div id="new-images-preview"></div>
+                        <br>
+                    
+                        <button type="submit">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+	        window.allowEdit = true;
+            window.markerPoints = {{ locations | tojson }};
+        </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+</div>
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+{% include 'components/map_modal.html' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const newFiles = [];
+    const imageInput = document.getElementById('event_images');
+    const newImagesPreview = document.getElementById('new-images-preview');
+    const removedExistingImagesInput = document.getElementById('removed-existing-images');
+    const existingImagesDiv = document.getElementById('existing-images');
+    const form = document.getElementById('edit-event-form');
+
+    // Preview and store newly selected images
+    imageInput.addEventListener('change', (event) => {
+        const files = Array.from(event.target.files);
+        files.forEach(file => {
+            newFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'image-wrapper';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '100px';
+                img.style.height = '100px';
+                imgWrapper.appendChild(img);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => {
+                    const index = newFiles.indexOf(file);
+                    if (index > -1) {
+                        newFiles.splice(index, 1);
+                    }
+                    newImagesPreview.removeChild(imgWrapper);
+                });
+                imgWrapper.appendChild(deleteBtn);
+
+                newImagesPreview.appendChild(imgWrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+        // Clear input so same file can be re-uploaded if needed
+        imageInput.value = '';
+    });
+
+    // Delete button for existing images
+    existingImagesDiv.querySelectorAll('.delete-existing-image-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const wrapper = button.closest('.image-wrapper');
+            const filename = wrapper.getAttribute('data-filename');
+            wrapper.remove();
+
+            // Add filename to removed images JSON array
+            let removedImages = [];
+            try {
+                removedImages = JSON.parse(removedExistingImagesInput.value);
+            } catch (e) {
+                removedImages = [];
+            }
+            if (!removedImages.includes(filename)) {
+                removedImages.push(filename);
+            }
+            removedExistingImagesInput.value = JSON.stringify(removedImages);
+        });
+    });
+
+    // Intercept form submission, send FormData with new files included
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        // Append new files to FormData
+        newFiles.forEach(file => {
+            formData.append('event_images', file);
+        });
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                return response.text();
+            }
+        })
+        .then(data => {
+            if (data) {
+                // Handle errors or response data here
+                console.error('Response:', data);
+                alert('Submission failed. Please check console for errors.');
+            }
+        })
+        .catch(error => {
+            console.error('Error during submission:', error);
+            alert('An error occurred during submission. Please try again later.');
+        });
+    });
+});
+</script>
+{% endblock %}

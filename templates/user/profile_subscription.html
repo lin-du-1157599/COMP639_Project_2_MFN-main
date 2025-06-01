@@ -1,0 +1,96 @@
+{% extends "base/userbase.html" %}
+{% block title %}User Subscription{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% set active_tab = 'subscription' %}
+
+{% block content %}
+
+<div class="container px-5">
+    <div class="row">  
+
+        <!-- Left - User profile sidebar -->
+        <div class="col col-md-4">
+            {% include 'components/profile_sidebar.html' %}
+        </div>
+
+        <!-- Right - Journey List -->
+        <div class="col-12 col-md-8 pt-3 bg-white">
+
+            <!-- Tab -->
+            <div>
+                {% include 'components/profile_tabs.html' %}
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content p-5" id="profileTabsContent">
+
+                <!-- Tab2 : Subscription Details -->
+                <div id="subscription">
+                    
+                    <!-- Subscription - Title -->
+                    <div class="pb-4">
+                            <h2 class="fw-bold">Sbuscription</h2>
+                            <p class="text-note fs-5">Manage your subscription and history details.</p>
+                    </div>
+
+                    <div class="custom-sec-border">
+                        <!-- Details: Current Plan -->
+                        <div>
+                            <div class="mb-4">
+                                <p class="text-note mb-1">Current Plan</p>
+                                <h4 class="fw-bold">{{ profile.subscription_status | capitalize }}</h4>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-note mb-1">Expiry Date</p>
+                                <h4 class="fw-bold">
+                                    {% if profile.subscription_end_date %}
+                                        {{ profile.subscription_end_date.strftime("%d %B, %Y") }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-note mb-1">Trial Status</p>
+                                <h4 class="fw-bold">
+                                    {% if profile.is_trial_used %}
+                                        Used
+                                    {% else %}
+                                        Available
+                                    {% endif %}
+                                </h4>
+
+                                {% if not profile.is_trial_used %}
+                                <div class="alert alert-info mt-3" role="alert" style="padding: 4px 8px 8px 8px; background-color: #f2f3f4; border: none;">
+                                            <span class="text-note fw-6" style="font-weight: 300;">
+                                            <i class="bi bi-info-circle me-2"></i>Start your free trial today.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Button -->
+                        <div class="col pt-4" style="border-top: 1px solid #dee2e6;">
+                            <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+                                <a href="{{ url_for('subscription_history') }}" class="custom-blue-link">
+                                    <i class="bi bi-clock-history me-2"></i>View Subscription History
+                                </a>
+                                <a href="{{ url_for('subscription') }}" class="btn btn-custom-primary btn-lg">Upgrade Plan</a>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+
+{% include 'components/photo_preview.html' %}
+
+{% endblock %}

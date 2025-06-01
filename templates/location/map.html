@@ -1,0 +1,67 @@
+<!-- Leaflet + Geocoder -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+	let map, marker;
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const modal = document.getElementById('mapModal');
+
+		modal.addEventListener('show.bs.modal', function () {
+			if (!map) {
+				map = L.map('map').setView([-43.5321, 172.6362], 13); // Christchurch
+
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '© OpenStreetMap contributors'
+				}).addTo(map);
+
+				const geocoder = L.Control.geocoder({
+					defaultMarkGeocode: false,
+					placeholder: 'Search for a place',
+					position: 'topleft'
+				}).addTo(map);
+
+				geocoder.on('markgeocode', function (e) {
+					const latlng = e.geocode.center;
+					const name = e.geocode.name;
+
+					if (marker) map.removeLayer(marker);
+					marker = L.marker(latlng).addTo(map).bindPopup(name).openPopup();
+					map.setView(latlng, 15);
+
+					updateForm(latlng, name);
+					bootstrap.Modal.getInstance(modal).hide();
+				});
+
+				map.on('click', function (e) {
+					const latlng = e.latlng;
+					const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=en`;
+
+					fetch(url)
+						.then(res => res.json())
+						.then(data => {
+							const addr = data.address;
+							const name = [addr.road, addr.suburb, addr.city, addr.country].filter(Boolean).join(', ') || 'Unknown';
+
+							if (marker) map.removeLayer(marker);
+							marker = L.marker(latlng).addTo(map).bindPopup(name).openPopup();
+							updateForm(latlng, name);
+							bootstrap.Modal.getInstance(modal).hide();
+						});
+				});
+			}
+
+			// Delay to fix incorrect sizing after modal opens
+			setTimeout(() => map.invalidateSize(), 200);
+		});
+	});
+
+	function updateForm(latlng, placeName) {
+		document.getElementById('latitude').value = latlng.lat;
+		document.getElementById('longitude').value = latlng.lng;
+		document.getElementById('location_name').value = placeName;
+	}
+</script>

@@ -1,0 +1,117 @@
+{% extends "base/userbase.html" %}
+{% block title %}User Profile{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% set active_page = 'profile' %}
+{% set active_tab = 'profile' %}
+
+{% block content %}
+
+<div class="container px-5">
+    <div class="row">  
+
+        <!-- Left - User profile sidebar -->
+        <div class="col col-md-4">
+            {% include 'components/profile_sidebar.html' %}
+        </div>
+
+        <!-- Right - Journey List -->
+        <div class="col-12 col-md-8 pt-3 bg-white">
+
+            <!-- Tab -->
+            <div>
+                {% include 'components/profile_tabs.html' %}
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content p-5" id="profileTabsContent">
+                
+                <!-- Tab1 : Profile Details -->
+                <div id="profile">
+
+                    <!-- Profile - Title -->
+                    <div class="pb-4">
+                        <h2 class="fw-bold">{{ profile.role.title() }} Profile</h2>
+                        <p class="text-note fs-5">Here's everything we know about you.</p>
+                    </div>
+
+                    <!-- Profile upadte success message -->
+                    {% if profile_update_successful %}
+                    <div class="m-0 pb-4">
+                        <div class="bg-success text-white text-center p-2 mb-2" style="border-radius: 4px;">
+                            <div class="p-2">Your profile has been updated successfully!</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Profile Details -->
+                    <form id="userform" name="userform" action="/profile" method="post">
+                        <input type="hidden" name="user_id" id="userid" class="form-control" value="{{profile['user_id']}}">
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6 mb-3">
+                                <label for="username" class="form-label fs-5">Username*</label>
+                                <input type="text" class="form-control form-control-lg" id="username" name="username" value="{{ profile.username }}" disabled>
+                                <div id="usernameHelp" class="form-text">Username can not be changed</div>
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                                <label for="useremail" class="form-label fw-bold fs-5">Email*</label>
+                                <input class="form-control form-control-lg {% if email_error %} is-invalid{% endif %}" type="text" id="email" name="email" value="{{ profile.email }}" required>
+                                <div id="emailHelp" class="form-text">Max 320 characters.</div>
+                                <div class="invalid-feedback">{{ email_error }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6 mb-3">
+                                <label for="firstname" class="form-label fw-bold fs-5">First Name</label>
+                                <input type="text" class="form-control form-control-lg {% if firstname_error %} is-invalid{% endif %}" id="first_name" name="first_name" value="{{ profile.first_name }}">
+                                <div id="firstnameHelp" class="form-text">Max 50 characters</div>
+                                <div class="invalid-feedback d-block">{{ firstname_error }}</div>
+                            </div>
+
+                            <div class="col-lg-6 mb-3">
+                                <label for="lastname" class="form-label fw-bold fs-5">Last Name</label>
+                                <input type="text" class="form-control form-control-lg {% if lastname_error %} is-invalid{% endif %}" id="last_name" name="last_name" value="{{ profile.last_name }}">
+                                <div id="lastnameHelp" class="form-text">Max 50 characters</div>
+                                <div class="invalid-feedback d-block">{{ lastname_error }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location" class="form-label fw-bold fs-5">Location</label>
+                            <input type="text" class="form-control form-control-lg {% if location_error %} is-invalid{% endif %}" id="location" name="location" value="{{ profile.location if profile.location is not none else '' }}">
+                            <div id="locationHelp" class="form-text">Max 50 characters</div>
+                            <div class="invalid-feedback">{{ location_error }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="personal_description" class="form-label fw-bold fs-5">Personal Description</label>
+                            <textarea id="personal_description" name="personal_description" class="form-control form-control-lg {% if personal_description_error %} is-invalid{% endif %}" placeholder="Enter your personal description" rows="5">{{ profile.personal_description if profile.personal_description is not none else ''  }}</textarea>
+                            <div class="invalid-feedback">{{ personal_description_error }}</div>
+                        </div>
+
+                        <!-- Button -->
+                        <div class="col pt-4">
+                            <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+                                <a href="{{ url_for('change_password') }}" class="custom-blue-link">
+                                    <i class="bi bi-key me-2"></i>Change Password
+                                </a>
+                                <div>
+                                    <a href="{{ url_for('profile') }}" class="btn btn-custom-back btn-lg me-3">Cancel</a>
+                                    <input type="submit" class="btn btn-primary btn-lg" value="Save Chagnes"/>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+
+{% include 'components/photo_preview.html' %}
+
+{% endblock %}

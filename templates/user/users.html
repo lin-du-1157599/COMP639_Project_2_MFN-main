@@ -1,0 +1,260 @@
+{% extends "base/userbase.html" %}
+{% block title %}User Management{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% if view_type == 'restricted' %}
+  {% set active_page = 'restricted_users' %}
+{% elif view_type == 'staff' %}
+  {% set active_page = 'staff_users' %}
+{% else %}
+  {% set active_page = 'all_users' %}
+{% endif %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<!-- Users list switch tab -->
+<div class="d-flex justify-content-center gap-3 mb-2">
+    <a href="{{ url_for('all_users') }}" class="btn btn-outline-primary {% if view_type == 'all' %}active{% endif %}">All Users</a>
+    <a href="{{ url_for('system_users') }}" class="btn btn-outline-primary {% if view_type == 'staff' %}active{% endif %}">Staff</a>
+    <a href="{{ url_for('restricted_users') }}" class="btn btn-outline-primary {% if view_type == 'restricted' %}active{% endif %}">Restricted</a>
+</div>
+  
+<section class="container px-5">
+
+    <!-- User Lists - Title -->
+    <section class="col mt-2 mb-5">
+        <h1 class="fw-bold">
+            {% if view_type == 'restricted' %}
+            Restricted Users
+            {% elif view_type == 'staff' %}
+            Staff Users
+            {% else %}
+            All Users
+            {% endif %}
+        </h1>
+        <p class="fs-5">
+            Manage and view 
+            {% if view_type == 'restricted' %}
+            Restricted 
+            {% elif view_type == 'staff' %}
+            Staff
+            {% else %}
+            All
+            {% endif %}
+            Users. You can update user roles and change statuses as needed.
+        </p>
+    </section>
+
+    <form action="
+        {% if view_type == 'restricted' %}
+            {{ url_for('search_restricted_users') }}
+        {% elif view_type == 'staff' %}
+            {{ url_for('search_staff_users') }}
+        {% else %}
+            {{ url_for('search_all_users') }}
+        {% endif %}"
+        method="GET">
+        <section class="row justify-content-center py-4">
+            <div class="d-md-flex gap-3">
+                <input type="text" name="searchterm" id="searchterm" class="form-control form-control-lg mb-3" placeholder="Search by" value="{{ keyword }}">
+                <select name="searchcat" id="searchcat" class="form-select form-select-lg  mb-3">
+                    <option value="username" {% if searchType == 'username' %}selected{% endif %}>Username</option>
+                    <option value="full_name" {% if searchType == 'full_name' %}selected{% endif %}>Full Name(First Last)</option>
+                    <option value="first_name" {% if searchType == 'first_name' %}selected{% endif %}>First Name</option>
+                    <option value="last_name" {% if searchType == 'last_name' %}selected{% endif %}>Last Name</option>
+                    <option value="email" {% if searchType == 'email' %}selected{% endif %}>Email</option>
+                </select>
+                <input type="submit" class="btn btn-primary btn-lg col-md-2 col-12 mb-3" value="Search">
+
+                {% if view_type == 'restricted' %}
+                    <a href="{{ url_for('restricted_users') }}" class="btn btn-secondary btn-lg col-md-2 col-12 mb-3" id="cancelSearch" style="display: none;">Cancel</a>
+                {% elif view_type == 'staff' %}
+                    <a href="{{ url_for('system_users') }}" class="btn btn-secondary btn-lg col-md-2 col-12 mb-3" id="cancelSearch" style="display: none;">Cancel</a>
+                {% else %}
+                    <a href="{{ url_for('all_users') }}" class="btn btn-secondary btn-lg col-md-2 col-12 mb-3" id="cancelSearch" style="display: none;">Cancel</a>
+                {% endif %}
+            </div>
+        </section>
+    </form>
+    
+    {% if userslist %}
+        {% for users in userslist %}
+            <input type="hidden" name="user_id" id="user_id" value="{{ users.user_id }}">
+        {% endfor %}
+    {% else %}
+        <p class="text-center align-middle lead text-muted">No results found.</p>
+    {% endif %}
+
+
+    {% if userslist %}
+    <!-- User Lists - Table -->
+    <section class="table-responsive">
+        <table class="table table-hover align-middle custom-hover-table">
+
+            <!-- Table Header -->
+            <thead class="align-middle">
+                <tr>
+                    <th scope="col" class="w-10 p-3">Username</th>
+                    <th scope="col" class="w-10 p-3">First Name</th>
+                    <th scope="col" class="w-10 p-3">Last Name</th>
+                    <th scope="col" class="w-15 p-3">Email</th>
+                    <th scope="col" class="w-5 text-center p-3">Role</th>
+                    <th scope="col" class="w-5 text-center p-3">Status</th>
+                    <th scope="col" class="w-5 text-center p-3">Sharing</th>
+                    <th scope="col" class="w-10 text-center p-3">Subscription</th>
+                    <th scope="col" class="w-25 p-3">Action</th>
+                </tr>
+            </thead>
+
+            <!-- Table Body -->
+            <tbody>
+                {% for users in userslist %}
+                    <tr>
+                        <!-- Body: User Name -->
+                        <td>
+                            {{users.username }}
+                            {% if session.get('username') == users.username %} (You) {% endif %}
+                        </td>
+
+                        <td>{{ users.first_name }}</td>
+                        <td>{{ users.last_name }}</td>
+
+                        <td>{{ users.email }}</td>
+
+                        <!-- Body: Role -->
+                        <td class="text-center">
+                            {% if users.role == 'admin' %}<span class="badge border border-warning text-warning">Admin</span>
+                            {% elif users.role == 'editor'%} <span class="badge border border-info text-info">Editor</span>
+                            {% elif users.role == 'moderator'%} <span class="badge border border-dark text-dark">Moderator</span>
+                            {% else %}<span class="badge border border-dark text-dark">Traveller</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Body: Role -->
+                        <td class="text-center">
+                            {% if users.status == 'active' %}<span class="badge bg-status-active">Active</span>
+                            {% else %} <span class="badge bg-status-banned">Banned</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Body: Shareable -->
+                        <td class="text-center">
+                            {% if users.shareable == 1 %} <i class="bi bi-check-circle-fill fs-5 text-success me-1" title="Can share"></i> 
+                            {% else %}<i class="bi bi-slash-circle-fill text-danger fs-5" title="Restricted from sharing"></i>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if users.subscription_status in [ 'Trial', 'Premium'] %}
+                                <i class="bi bi-star-fill me-2 custom-yellow"></i>
+                            {% endif %}
+                        </td>
+
+                        <!-- Body: Manage Button-->
+                        <td>
+                            <a href="{{ url_for('edit_user') }}?user_id={{ users.user_id }}"
+                               class="btn btn-custom-blue btn-sm me-2">
+                                <i class="bi bi-pencil me-2"></i>Manage
+                            </a>
+
+                            {% if users.role == 'traveller' %}
+                                <!-- Gift Subscription Dropdown -->
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-custom-green btn-sm dropdown-toggle d-inline-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" title="Gift Subscription">
+                                        <i class="bi bi-gift me-2"></i>Gift Subscription 
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button class="dropdown-item gift-btn" data-duration="1" data-user-id="{{ users['user_id'] }}">Gift 1 Month</button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item gift-btn" data-duration="3" data-user-id="{{ users['user_id'] }}">Gift 3 Months</button>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item gift-btn" data-duration="12" data-user-id="{{ users['user_id'] }}">Gift 1 Year</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <a href="{{ url_for('subscription_history', user_id=users.user_id) }}"
+                            class="btn btn-outline-secondary btn-sm me-2">
+                            <i class="bi bi-clock-history me-2"></i>View Subscription History
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                <!-- Gift Confirmation Modal -->
+                <div class="modal fade" id="giftConfirmModal" tabindex="-1" aria-labelledby="giftConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="giftConfirmModalLabel">Confirm Gift</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                        Are you sure you want to gift a subscription for <span id="giftDurationText"></span> month(s)?
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <a id="confirmGiftBtn" class="btn btn-primary" href="#">Yes, Gift It</a>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </tbody>
+            
+        </table>
+    </section>
+    {% endif %}
+
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const keywordInput = document.getElementById('searchterm');
+        const cancelButton = document.getElementById('cancelSearch');
+
+        // Show the cancel button if there is content in the input field
+        if (keywordInput.value.trim() !== '') {
+            cancelButton.style.display = 'inline-block';
+        }
+
+        // Show the cancel button when typing in the input field
+        keywordInput.addEventListener('input', function() {
+            if (keywordInput.value.trim() !== '') {
+                cancelButton.style.display = 'inline-block';
+            } else {
+                cancelButton.style.display = 'none';
+            }
+        });
+    });
+
+    const giftUrlTemplate = "/gift_subscription?user_id=USER_ID_PLACEHOLDER&duration_months=DURATION_PLACEHOLDER";
+
+    document.querySelectorAll('.gift-btn').forEach(function(button) {
+        button.addEventListener('click', function () {
+            const duration = this.getAttribute('data-duration');
+            const userId = this.getAttribute('data-user-id');
+
+            let url = giftUrlTemplate;
+            url = url.replace('USER_ID_PLACEHOLDER', encodeURIComponent(userId))
+                    .replace('DURATION_PLACEHOLDER', encodeURIComponent(duration));
+
+            document.getElementById('giftDurationText').innerText = duration;
+            const confirmBtn = document.getElementById('confirmGiftBtn');
+            confirmBtn.href = url;
+
+            const modal = new bootstrap.Modal(document.getElementById('giftConfirmModal'));
+            modal.show();
+        });
+    });
+</script>
+
+<style>
+    #searchterm::placeholder {
+        font-size: 1.2rem; /* Adjust the size as needed */
+    }
+</style>
+{% endblock %}

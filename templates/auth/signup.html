@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    <div class="container" style="background-color: #eff2f3">
+      <div class="row min-vh-100 align-items-center">
+        
+        <!-- image column -->
+        <div class="col-12 col-md-6 p-0 d-none d-lg-block image-column"></div>
+        
+        <!-- content column -->
+        <div class="col-12 col-md-6">
+          <div class="container col-12 col-md-10">
+
+            <!-- Display flash messages ABOVE the form -->
+            {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+              <div class="mb-3 p-5">
+                  {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} w-100">{{ message }}</div>
+                  {% endfor %}
+              </div>
+            {% endif %}
+            {% endwith %}
+            
+            <form action="{{ url_for('signup') }}" method="POST">
+            
+            <!-- Logo Image -->
+            <div class="col-8 align-items-center mx-auto d-block d-sm-none pt-5">
+              <a href="/">
+                <img src="/static/logo.png" class="img-fluid" alt="logo">
+              </a>
+            </div>
+
+            <!-- Sign up title -->
+            <div class="container py-5">
+              <h1 class="text-center fw-bold">Sign up</h1>
+              <p class="text-black-50 text-center">New to JourneyLog? Create your account and start recording your adventures.</p>
+            </div>
+            
+            <!-- Form -->
+            <!-- Account Info (Required) -->
+            <div class="container px-5 p-md-0">
+              <div class="row">
+                <div class="col-12 col-md-6 mb-2">
+                  <label for="username" class="form-label">Username*</label>
+                  <input type="text" class="form-control form-control-lg {% if username_error %} is-invalid{% endif %}" id="username" name="username" placeholder="Enter your username" maxlength=20 value="{{ username }}" required>
+                  <div id="usernameHelp" class="form-text pt-1">Max 20 characters, letters and numbers only</div>
+                  <div class="invalid-feedback">{{ username_error }}</div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-2 pt-3 pt-md-0">
+                  <label for="email" class="form-label">Email*</label>
+                  <input type="text" class="form-control form-control-lg {% if email_error %} is-invalid{% endif %}" id="email" name="email" placeholder="email@example.com" maxlength=320 value="{{ email }}" required>
+                  <div id="emailHelp" class="form-text pt-1">Max 320 characters.</div>
+                  <div class="invalid-feedback">{{ email_error }}</div>
+                </div>
+              </div>
+
+              <div class="row pt-2">
+                <div class="col-12 col-md-6 mb-1">
+                  <label for="password" class="form-label">Password*</label>
+                  <input type="password" class="form-control form-control-lg {% if password_error %} is-invalid{% endif %}" id="password" name="password" placeholder="Create your password" aria-describedby="passwordHelp" required>
+                  <div class="invalid-feedback">{{ password_error }}</div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-1 pt-3 pt-md-0">
+                  <label for="password" class="form-label">Confirm Password*</label>
+                  <input type="password" class="form-control form-control-lg {% if confirm_password_error %} is-invalid{% endif %}" id="confirm_password" name="confirm_password" placeholder="Confirm your password" aria-describedby="passwordHelp" required>
+                  <div class="invalid-feedback">{{ confirm_password_error }}</div>
+                </div>
+              </div>
+
+              <div id="passwordHelp" class="form-text">
+                <p class="mb-4">Password must contain at least 8 characters, 1 uppercase letter, 1 number and 1 special character</p>
+              </div>
+
+              <!-- Personal Details (Optional) -->
+              <div class="row">
+                <div class="col-12 col-md-6 mb-4">
+                  <label for="firstname" class="form-label">First Name</label>
+                  <input type="text" class="form-control form-control-lg {% if first_name_error %} is-invalid{% endif %}" id="first_name" name="first_name" maxlength=50 value="{{ first_name }}" placeholder="Enter your first name">
+                  <div id="firstnameHelp" class="form-text pt-1">Max 50 characters</div>
+                  <div class="invalid-feedback">{{ first_name_error }}</div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-4">
+                  <label for="lasttname" class="form-label">Last Name</label>
+                  <input type="text" class="form-control form-control-lg {% if last_name_error %} is-invalid{% endif %}" id="last_name" name="last_name" maxlength=50 value="{{ last_name }}" placeholder="Enter your last name">
+                  <div id="lastnameHelp" class="form-text pt-1">Max 50 characters</div>
+                  <div class="invalid-feedback">{{ last_name_error }}</div>
+                </div>
+              </div>
+
+              <div class="col mb-4">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" class="form-control form-control-lg {% if location_error %} is-invalid{% endif %}" id="location" name="location" maxlength=50 value="{{ location }}" placeholder="Enter your location">
+                <div id="locationHelp" class="form-text pt-1">Max 50 characters</div>
+                <div class="invalid-feedback">{{ location_error }}</div>
+              </div>
+            </div>
+
+            <!-- Submit button -->
+            <div class="px-3 px-5 px-md-0">
+              <button type="submit" class="btn btn-primary btn-lg w-100">Sign Up</button>
+            </div>
+
+          </form>
+
+          {% if signup_successful %}
+          <div class="align-items-center my-4">
+            <div class="text-center bg-success text-white rounded">
+                <div class="p-4">You have successfully signed up! <a class="link-light fw-bold" href="{{ url_for('login') }}">Log in</a></div>
+            </div>
+          </div>
+          {% else %}
+          <div class="d-flex align-items-center my-4 px-5 px-md-0">
+            <hr class="flex-grow-1">
+            <span class="px-3">or</span>
+            <hr class="flex-grow-1">
+          </div>
+
+          <div class="text-center">
+              <div class="p-2">Already have an account? <a href="{{ url_for('login') }}" class="fw-bold" style="color: #e55b4c;">Log in</a></div>
+          </div>
+          {% endif %}
+          </div>
+
+          <!-- Footer w/group name -->
+          <footer class="text-black text-center" style="font-size: 1rem; background-color: #eff2f3; padding: 12px;">
+            <p class="fw-bold mb-0">Group Name | MFN</p>
+            <p class="mb-0">Alan Du, Vincent Hu, Agnes Liu, Serena Wei, Cruise Zhou</p>
+          </footer>
+          
+        </div>
+      </div>  
+    </div>
+    
+  </body>
+</html>
+
+<style>
+  /* button style */
+  .btn-primary, .btn:first-child:active{
+    background-color: #16404e;
+    border: 1px solid #16404e;
+    height: 44px;
+  }
+  
+  .btn:hover {
+    background-color: #0f2b33;
+    border-color: #16404e;
+  }
+  
+  input::placeholder {
+    font-size: 12px;
+    color: #a0a0a0 !important;
+  }
+  
+  .image-column {
+    background-image: url('/static/auth_image.jpg');
+    background-size: cover;
+    background-position: center;
+    height: auto;
+  }
+  
+  @media (min-width: 992px) {
+    .image-column {
+      height: 100vh;
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    .container {
+      max-width: 100% !important;
+    }
+  }
+
+  .alert-danger{
+    color: #c12723;
+    background: #f0cbca;
+    border: 1px solid #c12723;
+    padding: 12px 20px;
+    font-family: Futura, 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  }
+
+  /* font style */
+  a, h1, h2, h3, h4, h5, h6, .alert-danger, .btn {
+    font-family: Futura, 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+
+  p{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+</style>

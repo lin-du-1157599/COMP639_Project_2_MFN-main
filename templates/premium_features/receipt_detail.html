@@ -1,0 +1,63 @@
+{% extends "base/userbase.html" %}
+{% block title %}Receipt{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+    <div class="card shadow">
+        <div class="card-body p-5">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h2 class="fw-bold mb-1">Receipt</h2>
+                    <p class="text-muted">Thank you for your payment.</p>
+                </div>
+                <div class="col text-end">
+                    <p class="mb-1"><strong>Receipt Date:</strong></p>
+                    <p>{{ subscription.created_at.strftime('%d %B, %Y at %H:%M') }}</p>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Plan Info -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h5 class="fw-bold">Subscription Plan</h5>
+                    <p><strong>Plan:</strong> {{ subscription.subscription_name }}</p>
+                    <p><strong>Duration:</strong> {{ subscription.duration_months }} month{{ 's' if subscription.duration_months > 1 else '' }}</p>
+                    <p><strong>Start Date:</strong> {{ subscription.start_date.strftime('%d %B, %Y') }}</p>
+                    <p><strong>End Date:</strong> {{ subscription.end_date.strftime('%d %B, %Y') }}</p>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h5 class="fw-bold">Payment Information</h5>
+                    <p><strong>Card Number:</strong> **** **** **** {{ subscription.card_number[-4:] if subscription.card_number else 'N/A' }}</p>
+                    <p><strong>Amount Paid:</strong> NZD ${{ '%.2f'|format(subscription.amount_paid) }}</p>
+                    {% if subscription.billing_country == 'NZ' %}
+                        <p><strong>GST (15%):</strong> NZD ${{ '%.2f'|format(subscription.gst_amount) }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Billing Info -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h5 class="fw-bold">Billing Information</h5>
+                    <p><strong>Billing Country:</strong> {{ subscription.billing_country }}</p>
+                    <p><strong>Billing Address:</strong> {{ subscription.billing_address }}</p>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-end">
+                <a href="{{ url_for('subscription_history', user_id=subscription.user_id) }}" class="btn btn-secondary">
+                  <i class="bi bi-arrow-left"></i> Back to Subscription History
+                </a>
+            </div>
+        </div>
+    </div>
+</section>profile
+{% endblock %}

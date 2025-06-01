@@ -1,0 +1,67 @@
+{% extends "base/userbase.html" %}
+
+{% block title %}Admin Home{% endblock %}
+
+{# Set the active page to be highlighted in the navigation bar. #}
+{% set active_page = 'home' %}
+
+{% block content %}
+
+<section class="container pt-2 text-center">
+    <div class="row justify-content-center m-4" style="padding: 8%; border-radius: 40px; background-image: url('/static/images/dashboard_bg.jpg'); background-size: cover; background-position: center;">
+        <div class="col-lg-10">
+            <div class="pt-3">
+                <h5 class="text-center fw-bold m-0">Admin Home</h5>
+                <h1 class="text-center fw-bold py-2 fs-dashboard-title">Welcome back to Journey Log!</h1>
+                <p class="text-center fs-5 text-muted">Record your journeys, add events, and share your adventures with others.</p>
+            </div>
+            <div class="d-flex justify-content-center gap-3 pt-3">
+                <a href="{{ url_for('myjourney') }}" class="btn btn-light btn-lg flex-grow-1" style="max-width: 240px; box-shadow: 4px 4px 10px #00000010">View My Journey</a>
+                <a href="{{ url_for('add_journey') }}" class="btn btn-primary btn-lg flex-grow-1" style="max-width: 240px; box-shadow: 4px 4px 10px #00000015">Create a Journey</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-2">
+        <div class="col-sm-4 p-4 d-flex">
+            <div class="card card-dashboard h-100">
+                <img src="/static/images/icon-1.png" class="img-fluid d-block mx-auto" alt="icon" style="width: 60px;">
+                <div class="card-body p-4">
+                    <h2 class="card-title fw-bold pb-2">Manage Users</h2>
+                    <p class="card-text fs-5 text-muted">View, search and update all user accounts. You can search by name or email, update user roles or banned users.</p>
+                </div>
+                <a href="{{ url_for('all_users') }}" class="btn btn-primary btn-lg w-100">Go</a>
+            </div>
+        </div>
+
+        <div class="col-sm-4 p-4 d-flex">
+            <div class="card card-dashboard h-100">
+                <img src="/static/images/icon-2.png" class="img-fluid d-block mx-auto" alt="icon" style="width: 60px;">
+                <div class="card-body p-4">
+                    <h2 class="card-title fw-bold pb-2">View Editor & Admin</h2>
+                    <p class="card-text fs-5 text-muted">Quickly access a list of all editors and admins. You can review their roles and update permissions if needed.</p>
+                </div>
+                <a href="{{ url_for('system_users') }}" class="btn btn-primary btn-lg w-100">Go</a>
+            </div>
+        </div>
+
+        <div class="col-sm-4 p-4 d-flex">
+            <div class="card card-dashboard h-100">
+                <img src="/static/images/icon-5.png" class="img-fluid d-block mx-auto" alt="icon" style="width: 60px;">
+                <div class="card-body p-4">
+                    <h2 class="card-title fw-bold pb-2">Manage Journeys & Events</h2>
+                    <p class="card-text fs-5 text-muted">Manage public-shared journeys and events. You can edit or remove inappropriate contetns or images to maintain a safe and welcoming environment.</p>
+                </div>
+                <a href="{{ url_for('public_journeys') }}" class="btn btn-primary btn-lg w-100">Go</a>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<!-- Footer w/group name -->
+<footer class="text-black text-center" style="font-size: 1rem; background-color: #eff2f3; padding: 12px; margin-top: 5em;">
+    <p class="fw-bold mb-0">Group Name | MFN</p>
+    <p class="mb-0">Alan Du, Vincent Hu, Agnes Liu, Serena Wei, Cruise Zhou</p>
+</footer> 
+{% endblock %}
